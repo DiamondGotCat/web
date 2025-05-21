@@ -1,0 +1,1 @@
+Rewrited legacy site using next.js
