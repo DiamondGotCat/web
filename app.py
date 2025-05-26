@@ -182,7 +182,7 @@ def index_page():
 
 @app.route('/icons/<path:filename>')
 def icon_return(filename):
-    return send_from_directory('icons', filename)
+    return send_from_directory('static/icons', filename)
 
 @app.route('/zeta/')
 def zeta_index_page():
