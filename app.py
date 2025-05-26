@@ -25,7 +25,7 @@ def log_access(headers: dict, date: Optional[datetime] = None, filepath: str = '
     if not cf_ray:
         cf_ray = str(uuid.uuid4())
 
-    iso_datetime = date.isoformat() + "Z"
+    iso_datetime = date.isoformat()
 
     new_entry = {
         "datetime": iso_datetime,
@@ -51,7 +51,7 @@ def log_error(error_str: str, date: Optional[datetime] = None, filepath: str = '
 
     reqid = str(uuid.uuid4())
 
-    iso_datetime = date.isoformat() + "Z"
+    iso_datetime = date.isoformat()
 
     new_entry = {
         "error": error_str,
@@ -67,9 +67,11 @@ def log_error(error_str: str, date: Optional[datetime] = None, filepath: str = '
 def update_analytics(country: str = "XX", date: str = None, amount: int = 1, filepath: str = './data/analytics.json'):
     if date is None:
         now = datetime.now(dt.timezone.utc)
-        date = now.isoformat(timespec='seconds') + "Z"
+        rounded = now.replace(minute=0, second=0, microsecond=0)
+        date_str = rounded.strftime("%Y-%m-%d %H:00")
     else:
-        now = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
+        now = datetime.strptime(date, "%Y-%m-%d %H:%M")
+        date_str = now.strftime("%Y-%m-%d %H:00")
 
     path = Path(filepath)
     if path.exists():
@@ -84,12 +86,12 @@ def update_analytics(country: str = "XX", date: str = None, amount: int = 1, fil
         }
 
     data["counter-total"] = data.get("counter-total", 0) + amount
-    data["counter"][date] = data["counter"].get(date, 0) + amount
+    data["counter"][date_str] = data["counter"].get(date_str, 0) + amount
     data["country-total"][country] = data["country-total"].get(country, 0) + amount
 
-    if date not in data["country"]:
-        data["country"][date] = {}
-    data["country"][date][country] = data["country"][date].get(country, 0) + amount
+    if date_str not in data["country"]:
+        data["country"][date_str] = {}
+    data["country"][date_str][country] = data["country"][date_str].get(country, 0) + amount
 
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
@@ -121,8 +123,7 @@ def get_analytics(filepath="./data/analytics.json"):
 
     for timestamp_str, count in daily_data.items():
         try:
-            timestamp = timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
-
+            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:00").replace(tzinfo=dt.timezone.utc)
         except ValueError:
             continue
 
@@ -200,18 +201,14 @@ def analytics_page():
     analytics = get_analytics()
 
     today = datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
-    
+
     today_labels = []
     today_counts = []
 
     for timestamp_str, count in analytics["counter"].items():
-        try:
-            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%SZ")
-            if timestamp.strftime("%Y-%m-%d") == today:
-                today_labels.append(timestamp_str)
-                today_counts.append(count)
-        except ValueError:
-            continue
+        if timestamp_str.startswith(today):
+            today_labels.append(timestamp_str)
+            today_counts.append(count)
 
     return render_template(
             'analytics.html',
@@ -220,7 +217,7 @@ def analytics_page():
             dailyCounts=list(analytics["counter"].values()),
             todayLabels=today_labels,
             todayCounts=today_counts,
-            
+
             totalCount=str(analytics["totalCount"]),
             monthlyCount=str(analytics["monthlyCount"]),
             weeklyCount=str(analytics["weeklyCount"]),
