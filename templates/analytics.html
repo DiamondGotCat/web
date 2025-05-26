@@ -17,30 +17,10 @@ DGC-Analytics v4.1
     const todayCounts = {{ todayCounts | tojson }};
 
     document.addEventListener('DOMContentLoaded', function() {
-        const dailyChartDom = document.getElementById('dailyChart');
-        const dailyChart = echarts.init(dailyChartDom, 'light');
-        const dailyOption = {
-            tooltip: {
-                trigger: 'axis'
-            },
-            xAxis: {
-                type: 'category',
-                data: dailyLabels
-            },
-            yAxis: {
-                type: 'value'
-            },
-            series: [{
-                name: 'Access',
-                type: 'line',
-                data: dailyCounts
-            }]
-        };
-        dailyChart.setOption(dailyOption);
 
-        const todayChartDom = document.getElementById('todayChart');
-        const todayChart = echarts.init(todayChartDom, 'light');
-        const todayOption = {
+        const chartDom = document.getElementById('chart');
+        const chart = echarts.init(chartDom, 'light');
+        const chartOption = {
             tooltip: {
                 trigger: 'axis'
             },
@@ -57,7 +37,7 @@ DGC-Analytics v4.1
                 data: todayCounts
             }]
         };
-        todayChart.setOption(todayOption);
+        chart.setOption(chartOption);
     });
 </script>
 <section class="bg-white lg:grid lg:h-150 lg:place-content-center dark:bg-black">
@@ -94,10 +74,7 @@ DGC-Analytics v4.1
     </div>
     <div class="p-8 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-8">
         <div class="rounded-lg border border-gray-800">
-            <div id="dailyChart" style="width: 100%; height: 400px; min-height: 400px;"></div>
-        </div>
-        <div class="rounded-lg border border-gray-800">
-            <div id="todayChart" style="width: 100%; height: 400px; min-height: 400px;"></div>
+            <div id="chart" style="width: 100%; height: 400px; min-height: 400px;"></div>
         </div>
     </div>
 </div>
