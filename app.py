@@ -50,6 +50,7 @@ def log_access(headers: dict, url, date: Optional[datetime] = None, filepath: st
     access_number = analytics["totalCount"]
 
     new_entry = {
+        "id": headers.get("Cf-Ray"),
         "number": access_number,
         "datetime": iso_datetime,
         "url": url,
@@ -84,6 +85,7 @@ def log_error(headers, error_str: str, error_e, url, date: Optional[datetime] = 
     access_number = analytics["totalCount"]
 
     new_entry = {
+        "id": headers.get("Cf-Ray"),
         "number": access_number,
         "error": str(error_e),
         "code": error_str,
