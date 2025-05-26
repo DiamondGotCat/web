@@ -202,6 +202,20 @@ def analytics_page():
     now = datetime.now(dt.timezone.utc)
     today_str = now.strftime("%Y-%m-%d")
 
+    daily_counter = {}
+    for timestamp_str, count in analytics["counter"].items():
+        try:
+            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
+        except ValueError:
+            continue
+
+        date_key = timestamp.strftime("%Y-%m-%d")
+        daily_counter[date_key] = daily_counter.get(date_key, 0) + count
+
+    sorted_daily_items = sorted(daily_counter.items())
+    daily_labels = [item[0] for item in sorted_daily_items]
+    daily_counts = [item[1] for item in sorted_daily_items]
+
     today_labels = [f"{hour:02d}:00" for hour in range(24)]
     today_counts = [0 for _ in range(24)]
 
@@ -217,8 +231,8 @@ def analytics_page():
 
     return render_template(
         'analytics.html',
-        dailyLabels=[ts[:10] for ts in analytics["counter"].keys()],
-        dailyCounts=list(analytics["counter"].values()),
+        dailyLabels=daily_labels,
+        dailyCounts=daily_counts,
         todayLabels=today_labels,
         todayCounts=today_counts,
         totalCount=str(analytics["totalCount"]),
@@ -226,7 +240,6 @@ def analytics_page():
         weeklyCount=str(analytics["weeklyCount"]),
         dailyCount=str(analytics["dailyCount"])
     )
-
 
 countrys = {
     # Normal
