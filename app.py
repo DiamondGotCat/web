@@ -242,9 +242,15 @@ def index_page():
 def api_index():
     headers = dict(request.headers)
     log_access(headers, request.url)
+    if "Cf-Ipcountry" in headers.keys():
+        update_analytics(country=headers["Cf-Ipcountry"])
+    else:
+        update_analytics()
+    analytics = get_analytics()
+    access_number = analytics["totalCount"]
     pong_data = {
         "code": 0,
-        "content": "Pong!"
+        "content": f"Access #{access_number}"
     }
     return jsonify(pong_data)
 
