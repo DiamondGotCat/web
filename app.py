@@ -268,7 +268,9 @@ def analytics_page():
             totalCount=str(analytics["totalCount"]),
             monthlyCount=str(analytics["monthlyCount"]),
             weeklyCount=str(analytics["weeklyCount"]),
-            dailyCount=str(analytics["dailyCount"])
+            dailyCount=str(analytics["dailyCount"]),
+
+            countryTotal=analytics["country-total"]
         )
 
 if __name__ == "__main__":
