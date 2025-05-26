@@ -172,26 +172,56 @@ def get_analytics(filepath="./data/analytics.json"):
 
 @app.errorhandler(400)
 def four_o_o(e):
+    headers = dict(request.headers)
+    log_access(headers)
+    if "CF-IPCountry" in headers.keys():
+        update_analytics(country=headers["CF-IPCountry"])
+    else:
+        update_analytics()
     log_error("400 Bad Request")
     return render_template('error.html', enumber="400", ename="Bad Request")
 
 @app.errorhandler(401)
 def four_o_one(e):
+    headers = dict(request.headers)
+    log_access(headers)
+    if "CF-IPCountry" in headers.keys():
+        update_analytics(country=headers["CF-IPCountry"])
+    else:
+        update_analytics()
     log_error("401 Unauthorized")
     return render_template('error.html', enumber="401", ename="Unauthorized")
 
 @app.errorhandler(403)
 def four_o_two(e):
+    headers = dict(request.headers)
+    log_access(headers)
+    if "CF-IPCountry" in headers.keys():
+        update_analytics(country=headers["CF-IPCountry"])
+    else:
+        update_analytics()
     log_error("403 Forbidden")
     return render_template('error.html', enumber="403", ename="Forbidden")
 
 @app.errorhandler(404)
 def four_o_four(e):
+    headers = dict(request.headers)
+    log_access(headers)
+    if "CF-IPCountry" in headers.keys():
+        update_analytics(country=headers["CF-IPCountry"])
+    else:
+        update_analytics()
     log_error("404 Not Found")
     return render_template('error.html', enumber="404", ename="Not Found")
 
 @app.errorhandler(414)
 def four_one_four(e):
+    headers = dict(request.headers)
+    log_access(headers)
+    if "CF-IPCountry" in headers.keys():
+        update_analytics(country=headers["CF-IPCountry"])
+    else:
+        update_analytics()
     log_error("414 URI Too Long")
     return render_template('error.html', enumber="414", ename="URI Too Long")
 
