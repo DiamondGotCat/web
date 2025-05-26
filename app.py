@@ -122,8 +122,8 @@ def access_logs_to_pages(json_path="./logs/access.json"):
     url_counter = Counter()
 
     for entry in logs:
-        url = entry.get('url')
-        if url:
+        url = entry.get("url", "")
+        if isinstance(url, str) and url.strip():
             url_counter[url] += 1
 
     return dict(url_counter)
