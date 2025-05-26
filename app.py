@@ -1,5 +1,6 @@
 import json
 import uuid
+import os
 from pathlib import Path
 import datetime as dt
 from datetime import datetime, timedelta
@@ -9,10 +10,8 @@ from typing import Optional
 from countrys import Countrys
 
 app = Flask(__name__)
-log_initial_text = "INITIAL LOG - This is 1st Line"
-
-
 ALLOWED_HOST = 'diamondgotcat.net'
+log_initial_text = f"STARTED - Working on {ALLOWED_HOST}"
 
 @app.before_request
 def limit_host_header():
@@ -21,13 +20,13 @@ def limit_host_header():
         headers = dict(request.headers)
         return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked. Please use `diamondgotcat.net` instead."), 403
 
-def log_reset(filepath: str = './logs/log.txt'):
+def log_reset(filepath: str = './logs/latest.log'):
     path = Path(filepath)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open('w', encoding='utf-8') as f:
         f.write(log_initial_text + '\n')
 
-def log_text(content, filepath: str = './logs/log.txt'):
+def log_text(content, filepath: str = './logs/latest.log'):
     path = Path(filepath)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -38,6 +37,8 @@ def log_text(content, filepath: str = './logs/log.txt'):
 
     with path.open('a', encoding='utf-8') as f:
         f.writelines(lines)
+    
+    print(content)
 
 def log_access(headers: dict, url, date: Optional[datetime] = None, filepath: str = './logs/access.json'):
     if date is None:
@@ -360,4 +361,10 @@ def analytics_page():
 
 if __name__ == "__main__":
     log_reset()
-    app.run("0.0.0.0", 80)
+    try:
+        app.run("0.0.0.0", 80)
+    except KeyboardInterrupt:
+        log_uuid = str(uuid.uuid4())
+        os.rename("./logs/latest.log", f"./logs/archives/{log_uuid}.log")
+        print(f"Process stopped. Latest log file are here: {f"./logs/archives/{log_uuid}.log"}")
+        print("See you next time!")
