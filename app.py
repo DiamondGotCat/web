@@ -222,7 +222,8 @@ def index_page():
         update_analytics(country=headers["Cf-Ipcountry"])
     else:
         update_analytics()
-    return render_template('index.html')
+    analytics = get_analytics()
+    return render_template('index.html', accessNo=str(analytics["totalCount"]))
 
 @app.route('/icons/<path:filename>')
 def icon_return(filename):
