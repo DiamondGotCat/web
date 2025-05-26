@@ -1,4 +1,4 @@
-# web
+# Web
 Source code of diamondgotcat.net
 
 ## Source code Infomation
