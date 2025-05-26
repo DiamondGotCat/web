@@ -9,6 +9,25 @@ from markupsafe import escape
 from typing import Optional
 
 app = Flask(__name__)
+log_initial_text = "INITIAL LOG - This is 1st Line"
+
+def log_reset(filepath: str = './logs/log.txt'):
+    path = Path(filepath)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('w', encoding='utf-8') as f:
+        f.write(log_initial_text + '\n')
+
+def log_text(content, filepath: str = './logs/log.txt'):
+    path = Path(filepath)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    if isinstance(content, list):
+        lines = [str(line) + '\n' for line in content]
+    else:
+        lines = [str(content) + '\n']
+
+    with path.open('a', encoding='utf-8') as f:
+        f.writelines(lines)
 
 def log_access(headers: dict, date: Optional[datetime] = None, filepath: str = './logs/access.json'):
     if date is None:
@@ -35,6 +54,8 @@ def log_access(headers: dict, date: Optional[datetime] = None, filepath: str = '
     data[cf_ray] = new_entry
 
     path.parent.mkdir(parents=True, exist_ok=True)
+    log_text("----- NEW ACCESS -----")
+    log_text(json.dumps(new_entry))
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
@@ -61,6 +82,8 @@ def log_error(error_str: str, date: Optional[datetime] = None, filepath: str = '
     data[reqid] = new_entry
 
     path.parent.mkdir(parents=True, exist_ok=True)
+    log_text("----- ACCESS ERROR -----")
+    log_text(json.dumps(new_entry))
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
@@ -94,6 +117,8 @@ def update_analytics(country: str = "XX", date: str = None, amount: int = 1, fil
     data["country"][date_str][country] = data["country"][date_str].get(country, 0) + amount
 
     with open(filepath, 'w', encoding='utf-8') as f:
+        log_text("----- UPDATE DGC-ANALYTICS DATA -----")
+        log_text(json.dumps(data))
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 def get_analytics(filepath="./data/analytics.json"):
@@ -225,4 +250,5 @@ def analytics_page():
         )
 
 if __name__ == "__main__":
+    log_reset()
     app.run("0.0.0.0", 80)
