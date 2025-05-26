@@ -201,6 +201,18 @@ def four_one_four(e):
     log_error(headers, "414 URI Too Long")
     return render_template('error.html', enumber="414", ename="URI Too Long")
 
+@app.errorhandler(500)
+def five_o_o(e):
+    headers = dict(request.headers)
+    log_error(headers, "500 Internal Server Error")
+    return render_template('error.html', enumber="500", ename="Internal Server Error")
+
+@app.errorhandler(503)
+def five_o_three(e):
+    headers = dict(request.headers)
+    log_error(headers, "503 Service Unavailable")
+    return render_template('error.html', enumber="503", ename="Service Unavailable")
+
 @app.route('/')
 def index_page():
     headers = dict(request.headers)
