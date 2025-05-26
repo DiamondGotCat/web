@@ -303,6 +303,10 @@ def zeta_index_page():
 @app.route('/analytics/')
 def analytics_page():
     headers = dict(request.headers)
+    if "Cf-Ipcountry" in headers.keys():
+        update_analytics(country=headers["Cf-Ipcountry"])
+    else:
+        update_analytics()
     log_access(headers, request.url)
     analytics = get_analytics()
 
