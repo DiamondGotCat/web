@@ -313,6 +313,14 @@ def zeta_index_page():
     log_access(headers, request.url)
     return render_template('zeta-index.html')
 
+@app.route('/burners/')
+def burners_page():
+    return render_template('burners.html')
+
+@app.route('/burners/img/<path:filename>')
+def burners_img(filename):
+    return send_from_directory('static/burners', filename)
+
 @app.route('/analytics/')
 def analytics_page():
     headers = dict(request.headers)
