@@ -217,8 +217,8 @@ def five_o_three(e):
 def index_page():
     headers = dict(request.headers)
     log_access(headers)
-    if "CF-IPCountry" in headers.keys():
-        update_analytics(country=headers["CF-IPCountry"])
+    if "Cf-Ipcountry" in headers.keys():
+        update_analytics(country=headers["Cf-Ipcountry"])
     else:
         update_analytics()
     return render_template('index.html')
@@ -235,8 +235,8 @@ def favicon_return():
 def zeta_index_page():
     headers = dict(request.headers)
     log_access(headers)
-    if "CF-IPCountry" in headers.keys():
-        update_analytics(country=headers["CF-IPCountry"])
+    if "Cf-Ipcountry" in headers.keys():
+        update_analytics(country=headers["Cf-Ipcountry"])
     else:
         update_analytics()
     return render_template('zeta-index.html')
