@@ -199,33 +199,34 @@ def analytics_page():
     log_access(headers)
     analytics = get_analytics()
 
-    today = datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
-    
-    today_labels = []
-    today_counts = []
+    now = datetime.now(dt.timezone.utc)
+    today_str = now.strftime("%Y-%m-%d")
+
+    today_labels = [f"{hour:02d}:00" for hour in range(24)]
+    today_counts = [0 for _ in range(24)]
 
     for timestamp_str, count in analytics["counter"].items():
         try:
-            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%SZ")
-            if timestamp.strftime("%Y-%m-%d") == today:
-                today_labels.append(timestamp_str)
-                today_counts.append(count)
+            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
         except ValueError:
             continue
 
-    return render_template(
-            'analytics.html',
+        if timestamp.date() == now.date():
+            hour = timestamp.hour
+            today_counts[hour] += count
 
-            dailyLabels=list(analytics["counter"].keys()),
-            dailyCounts=list(analytics["counter"].values()),
-            todayLabels=today_labels,
-            todayCounts=today_counts,
-            
-            totalCount=str(analytics["totalCount"]),
-            monthlyCount=str(analytics["monthlyCount"]),
-            weeklyCount=str(analytics["weeklyCount"]),
-            dailyCount=str(analytics["dailyCount"])
-        )
+    return render_template(
+        'analytics.html',
+        dailyLabels=[ts[:10] for ts in analytics["counter"].keys()],
+        dailyCounts=list(analytics["counter"].values()),
+        todayLabels=today_labels,
+        todayCounts=today_counts,
+        totalCount=str(analytics["totalCount"]),
+        monthlyCount=str(analytics["monthlyCount"]),
+        weeklyCount=str(analytics["weeklyCount"]),
+        dailyCount=str(analytics["dailyCount"])
+    )
+
 
 countrys = {
     # Normal
