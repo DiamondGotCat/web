@@ -3,8 +3,7 @@ import uuid
 from pathlib import Path
 import datetime as dt
 from datetime import datetime, timedelta
-from flask import Flask, request, send_from_directory
-from flask import render_template
+from flask import Flask, request, send_from_directory, render_template, jsonify
 from markupsafe import escape
 from typing import Optional
 from countrys import Countrys
@@ -224,6 +223,16 @@ def index_page():
         update_analytics()
     analytics = get_analytics()
     return render_template('index.html', accessNo=str(analytics["totalCount"]))
+
+@app.route('/api/v1/')
+def api_index():
+    headers = dict(request.headers)
+    log_access(headers)
+    pong_data = {
+        "code": 0,
+        "content": "Pong!"
+    }
+    return jsonify(pong_data)
 
 @app.route('/icons/<path:filename>')
 def icon_return(filename):
