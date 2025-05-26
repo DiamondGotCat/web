@@ -8,6 +8,7 @@ from flask import Flask, request, abort, send_from_directory, render_template, j
 from markupsafe import escape
 from typing import Optional
 from countrys import Countrys
+from collections import Counter
 
 app = Flask(__name__)
 ALLOWED_HOST = 'diamondgotcat.net'
@@ -113,6 +114,32 @@ def log_error(headers, error_str: str, error_e, url, date: Optional[datetime] = 
     log_text("")
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+
+def access_logs_to_pages(json_path="./logs/access.json"):
+    with open(json_path, 'r', encoding='utf-8') as f:
+        logs = json.load(f)
+
+    url_counter = Counter()
+
+    for entry in logs:
+        url = entry.get('url')
+        if url:
+            url_counter[url] += 1
+
+    return dict(url_counter)
+
+def access_logs_to_referers(file_path="./logs/access.json"):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        logs = json.load(f)
+
+    referers = [
+        entry["headers"].get("Referer")
+        for entry in logs
+        if "headers" in entry and "Referer" in entry["headers"]
+    ]
+
+    referer_count = dict(Counter(referers))
+    return referer_count
 
 def update_analytics(country: str = "XX", date: str = None, amount: int = 1, filepath: str = './data/analytics.json'):
     if date is None:
@@ -357,6 +384,9 @@ def analytics_page():
             today_labels.append(timestamp_str)
             today_counts.append(count)
 
+    pages = access_logs_to_pages()
+    referers = access_logs_to_referers()
+
     return render_template(
             'analytics.html',
 
@@ -370,7 +400,10 @@ def analytics_page():
             weeklyCount=str(analytics["weeklyCount"]),
             dailyCount=str(analytics["dailyCount"]),
 
-            countryTotal=new_country_total
+            countryTotal=new_country_total,
+
+            pages=pages,
+            referers=referers
         )
 
 if __name__ == "__main__":
