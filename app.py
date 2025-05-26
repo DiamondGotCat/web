@@ -3,13 +3,23 @@ import uuid
 from pathlib import Path
 import datetime as dt
 from datetime import datetime, timedelta
-from flask import Flask, request, send_from_directory, render_template, jsonify
+from flask import Flask, request, abort, send_from_directory, render_template, jsonify
 from markupsafe import escape
 from typing import Optional
 from countrys import Countrys
 
 app = Flask(__name__)
 log_initial_text = "INITIAL LOG - This is 1st Line"
+
+
+ALLOWED_HOST = 'diamondgotcat.net'
+
+@app.before_request
+def limit_host_header():
+    host = request.host.split(':')[0]
+    if host != ALLOWED_HOST:
+        headers = dict(request.headers)
+        return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked. Please use `diamondgotcat.net` instead."), 403
 
 def log_reset(filepath: str = './logs/log.txt'):
     path = Path(filepath)
