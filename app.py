@@ -40,7 +40,7 @@ def log_access(headers: dict, date: Optional[datetime] = None, filepath: str = '
     else:
         data = {}
 
-    cf_ray = headers.get("CF-Ray")
+    cf_ray = headers.get("Cf-Ray")
     if not cf_ray:
         cf_ray = str(uuid.uuid4())
 
@@ -56,10 +56,11 @@ def log_access(headers: dict, date: Optional[datetime] = None, filepath: str = '
     path.parent.mkdir(parents=True, exist_ok=True)
     log_text("----- NEW ACCESS -----")
     log_text(json.dumps(new_entry, indent=4))
+    log_text("")
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-def log_error(headers, error_str: str, date: Optional[datetime] = None, filepath: str = './logs/error.json'):
+def log_error(headers, error_str: str, error_e, date: Optional[datetime] = None, filepath: str = './logs/error.json'):
     if date is None:
         date = datetime.now(dt.timezone.utc)
 
@@ -75,7 +76,8 @@ def log_error(headers, error_str: str, date: Optional[datetime] = None, filepath
     iso_datetime = date.isoformat()
 
     new_entry = {
-        "error": error_str,
+        "error": str(error_e),
+        "code": error_str,
         "datetime": iso_datetime,
         "header": headers,
     }
@@ -85,6 +87,7 @@ def log_error(headers, error_str: str, date: Optional[datetime] = None, filepath
     path.parent.mkdir(parents=True, exist_ok=True)
     log_text("----- ACCESS ERROR -----")
     log_text(json.dumps(new_entry, indent=4))
+    log_text("")
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
@@ -120,6 +123,7 @@ def update_analytics(country: str = "XX", date: str = None, amount: int = 1, fil
     with open(filepath, 'w', encoding='utf-8') as f:
         log_text("----- UPDATE DGC-ANALYTICS DATA -----")
         log_text(json.dumps(data, indent=4))
+        log_text("")
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 def get_analytics(filepath="./data/analytics.json"):
@@ -174,43 +178,43 @@ def get_analytics(filepath="./data/analytics.json"):
 @app.errorhandler(400)
 def four_o_o(e):
     headers = dict(request.headers)
-    log_error(headers, "400 Bad Request")
+    log_error(headers, "400 Bad Request", e)
     return render_template('error.html', enumber="400", ename="Bad Request")
 
 @app.errorhandler(401)
 def four_o_one(e):
     headers = dict(request.headers)
-    log_error(headers, "401 Unauthorized")
+    log_error(headers, "401 Unauthorized", e)
     return render_template('error.html', enumber="401", ename="Unauthorized")
 
 @app.errorhandler(403)
 def four_o_two(e):
     headers = dict(request.headers)
-    log_error(headers, "403 Forbidden")
+    log_error(headers, "403 Forbidden", e)
     return render_template('error.html', enumber="403", ename="Forbidden")
 
 @app.errorhandler(404)
 def four_o_four(e):
     headers = dict(request.headers)
-    log_error(headers, "404 Not Found")
+    log_error(headers, "404 Not Found", e)
     return render_template('error.html', enumber="404", ename="Not Found")
 
 @app.errorhandler(414)
 def four_one_four(e):
     headers = dict(request.headers)
-    log_error(headers, "414 URI Too Long")
+    log_error(headers, "414 URI Too Long", e)
     return render_template('error.html', enumber="414", ename="URI Too Long")
 
 @app.errorhandler(500)
 def five_o_o(e):
     headers = dict(request.headers)
-    log_error(headers, "500 Internal Server Error")
+    log_error(headers, "500 Internal Server Error", e)
     return render_template('error.html', enumber="500", ename="Internal Server Error")
 
 @app.errorhandler(503)
 def five_o_three(e):
     headers = dict(request.headers)
-    log_error(headers, "503 Service Unavailable")
+    log_error(headers, "503 Service Unavailable", e)
     return render_template('error.html', enumber="503", ename="Service Unavailable")
 
 @app.route('/')
