@@ -16,8 +16,8 @@ ALLOWED_HOST = 'diamondgotcat.net'
 
 @app.before_request
 def limit_host_header():
-    host = request.host.split(':')[0]
-    if host != ALLOWED_HOST:
+    host: str = request.host.split(':')[0]
+    if not host.endswith(ALLOWED_HOST):
         headers = dict(request.headers)
         return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked. Please use `diamondgotcat.net` instead."), 403
 
