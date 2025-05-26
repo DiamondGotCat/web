@@ -7,6 +7,7 @@ from flask import Flask, request, send_from_directory
 from flask import render_template
 from markupsafe import escape
 from typing import Optional
+from dateutil import parser
 
 app = Flask(__name__)
 
@@ -200,28 +201,29 @@ def analytics_page():
     analytics = get_analytics()
 
     now = datetime.now(dt.timezone.utc)
-    today_str = now.strftime("%Y-%m-%d")
 
+    # --- 1. 日単位集計 (dailyChart) ---
     daily_counter = {}
     for timestamp_str, count in analytics["counter"].items():
         try:
-            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
+            timestamp = parser.isoparse(timestamp_str).astimezone(dt.timezone.utc)
         except ValueError:
             continue
 
         date_key = timestamp.strftime("%Y-%m-%d")
         daily_counter[date_key] = daily_counter.get(date_key, 0) + count
 
-    sorted_daily_items = sorted(daily_counter.items())
-    daily_labels = [item[0] for item in sorted_daily_items]
-    daily_counts = [item[1] for item in sorted_daily_items]
+    sorted_daily = sorted(daily_counter.items())
+    daily_labels = [item[0] for item in sorted_daily]
+    daily_counts = [item[1] for item in sorted_daily]
 
+    # --- 2. 時間単位集計 (todayChart) ---
     today_labels = [f"{hour:02d}:00" for hour in range(24)]
     today_counts = [0 for _ in range(24)]
 
     for timestamp_str, count in analytics["counter"].items():
         try:
-            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
+            timestamp = parser.isoparse(timestamp_str).astimezone(dt.timezone.utc)
         except ValueError:
             continue
 
