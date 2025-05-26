@@ -215,6 +215,10 @@ def index_page():
 def icon_return(filename):
     return send_from_directory('static/icons', filename)
 
+@app.route('/favicon.ico')
+def favicon_return():
+    return send_from_directory('static/favicon', "favicon.ico")
+
 @app.route('/zeta/')
 def zeta_index_page():
     headers = dict(request.headers)
