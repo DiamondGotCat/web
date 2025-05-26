@@ -202,11 +202,12 @@ def analytics_page():
 
     now = datetime.now(dt.timezone.utc)
 
-    # --- 1. 日単位集計 (dailyChart) ---
     daily_counter = {}
     for timestamp_str, count in analytics["counter"].items():
         try:
-            timestamp = parser.isoparse(timestamp_str).astimezone(dt.timezone.utc)
+            if timestamp_str.endswith("Z"):
+                timestamp_str = timestamp_str[:-1]
+            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S")
         except ValueError:
             continue
 
@@ -217,13 +218,14 @@ def analytics_page():
     daily_labels = [item[0] for item in sorted_daily]
     daily_counts = [item[1] for item in sorted_daily]
 
-    # --- 2. 時間単位集計 (todayChart) ---
     today_labels = [f"{hour:02d}:00" for hour in range(24)]
     today_counts = [0 for _ in range(24)]
 
     for timestamp_str, count in analytics["counter"].items():
         try:
-            timestamp = parser.isoparse(timestamp_str).astimezone(dt.timezone.utc)
+            if timestamp_str.endswith("Z"):
+                timestamp_str = timestamp_str[:-1]
+            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S")
         except ValueError:
             continue
 
