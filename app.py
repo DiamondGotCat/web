@@ -46,7 +46,11 @@ def log_access(headers: dict, url, date: Optional[datetime] = None, filepath: st
 
     iso_datetime = date.isoformat()
 
+    analytics = get_analytics()
+    access_number = analytics["totalCount"]
+
     new_entry = {
+        "number": access_number,
         "datetime": iso_datetime,
         "url": url,
         "headers": headers
@@ -60,7 +64,7 @@ def log_access(headers: dict, url, date: Optional[datetime] = None, filepath: st
     log_text("")
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-
+    
 def log_error(headers, error_str: str, error_e, url, date: Optional[datetime] = None, filepath: str = './logs/error.json'):
     if date is None:
         date = datetime.now(dt.timezone.utc)
@@ -76,7 +80,11 @@ def log_error(headers, error_str: str, error_e, url, date: Optional[datetime] = 
 
     iso_datetime = date.isoformat()
 
+    analytics = get_analytics()
+    access_number = analytics["totalCount"]
+
     new_entry = {
+        "number": access_number,
         "error": str(error_e),
         "code": error_str,
         "url": url,
