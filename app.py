@@ -7,6 +7,7 @@ from flask import Flask, request, send_from_directory
 from flask import render_template
 from markupsafe import escape
 from typing import Optional
+from countrys import Countrys
 
 app = Flask(__name__)
 log_initial_text = "INITIAL LOG - This is 1st Line"
@@ -251,6 +252,16 @@ def analytics_page():
 
     today_labels = []
     today_counts = []
+    got_country_total: dict = analytics["country-total"]
+    new_country_total = {}
+    for country in got_country_total.keys():
+        if country in Countrys.keys():
+            country_id = country
+            country_name = Countrys[country_id]
+        else:
+            country_id = "XX"
+            country_name = Countrys[country_id]
+        new_country_total[country_id] = [country_name, got_country_total[country]]
 
     for timestamp_str, count in analytics["counter"].items():
         if timestamp_str.startswith(today):
@@ -270,7 +281,7 @@ def analytics_page():
             weeklyCount=str(analytics["weeklyCount"]),
             dailyCount=str(analytics["dailyCount"]),
 
-            countryTotal=analytics["country-total"]
+            countryTotal=new_country_total
         )
 
 if __name__ == "__main__":

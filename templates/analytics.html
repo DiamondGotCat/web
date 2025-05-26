@@ -82,8 +82,8 @@ DGC-Analytics v4.1
                 <dl class="-my-3 divide-y divide-gray-200 dark:divide-gray-800 text-sm">
                     {% for key, value in countryTotal.items() %}
                     <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4">
-                        <dt class="font-medium text-black dark:text-white">{{ key }}</dt>
-                        <dd class="text-gray-700 dark:text-gray-200 sm:col-span-2">{{ value }}</dd>
+                        <dt class="font-medium text-black dark:text-white">{{ value[0] }} ({{ key }})</dt>
+                        <dd class="text-gray-700 dark:text-gray-200 sm:col-span-2">{{ value[1] }}</dd>
                     </div>
                     {% endfor %}
                 </dl>
