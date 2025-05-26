@@ -55,7 +55,7 @@ def log_access(headers: dict, date: Optional[datetime] = None, filepath: str = '
 
     path.parent.mkdir(parents=True, exist_ok=True)
     log_text("----- NEW ACCESS -----")
-    log_text(json.dumps(new_entry))
+    log_text(json.dumps(new_entry, indent=4))
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
@@ -83,7 +83,7 @@ def log_error(error_str: str, date: Optional[datetime] = None, filepath: str = '
 
     path.parent.mkdir(parents=True, exist_ok=True)
     log_text("----- ACCESS ERROR -----")
-    log_text(json.dumps(new_entry))
+    log_text(json.dumps(new_entry, indent=4))
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
@@ -118,7 +118,7 @@ def update_analytics(country: str = "XX", date: str = None, amount: int = 1, fil
 
     with open(filepath, 'w', encoding='utf-8') as f:
         log_text("----- UPDATE DGC-ANALYTICS DATA -----")
-        log_text(json.dumps(data))
+        log_text(json.dumps(data, indent=4))
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 def get_analytics(filepath="./data/analytics.json"):
