@@ -72,21 +72,23 @@ Powered by DGC-Analytics
             <p>Today</p>
         </div>
     </div>
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-8">
-        <div class="rounded-xl border border-gray-800">
-            <div id="chart" style="width: 100%; height: 400px; min-height: 400px;"></div>
+    <div class="rounded-xl border border-gray-800">
+        <div id="chart" style="width: 100%; height: 400px; min-height: 400px;"></div>
+    </div>
+    <div class="rounded-xl border border-gray-800">
+        <div class="p-4">
+            <p class="text-xl">Countrys</p>
+            <p>Analyzed using IP addresses・Provided by Cloudflare</p>
         </div>
-        <div class="rounded-xl border border-gray-800">
-            <div class="flow-root p-4">
-                <dl class="-my-3 divide-y divide-gray-200 dark:divide-gray-800 text-sm">
-                    {% for key, value in countryTotal.items() %}
-                    <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4">
-                        <dt class="font-medium text-black dark:text-white">{{ value[0] }} ({{ key }})</dt>
-                        <dd class="text-gray-700 dark:text-gray-200 sm:col-span-2">{{ value[1] }}</dd>
-                    </div>
-                    {% endfor %}
-                </dl>
-            </div>
+        <div class="flow-root p-4">
+            <dl class="-my-3 divide-y divide-gray-200 dark:divide-gray-800 text-sm">
+                {% for key, value in countryTotal.items() %}
+                <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4">
+                    <dt class="font-medium text-black dark:text-white">{{ value[0] }} ({{ key }})</dt>
+                    <dd class="text-gray-700 dark:text-gray-200 sm:col-span-2">{{ value[1] }}</dd>
+                </div>
+                {% endfor %}
+            </dl>
         </div>
     </div>
     <div class="rounded-xl border border-gray-800">
