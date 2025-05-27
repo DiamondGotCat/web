@@ -11,9 +11,7 @@ Source code of diamondgotcat.net
 **Analytics System:** Original(DGC-Analytics)
 
 ## Server Infomation
-**Type:** VPS, Rental
-
-**Service:** XServer VPS
+**Type:** Laptop(Panasonic, Let's note, CF-SX4, Intel Core i5-5300U, 12GB RAM, 500GB SSD)
 
 **OS:** Rocky Linux 9
 
@@ -21,4 +19,4 @@ Source code of diamondgotcat.net
 
 **URL:** `https://diamondgotcat.net/`
 
-**System:** Backgroud Working using Systemd
+**System:** Systemd, Cloudflare Tunnel
