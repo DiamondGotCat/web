@@ -14,14 +14,6 @@ app = Flask(__name__)
 ALLOWED_HOST = 'diamondgotcat.net'
 log_initial_text = f"STARTED - Working on {ALLOWED_HOST}"
 
-@app.before_request
-def limit_host_header():
-    host: str = request.host.split(':')[0]
-    if not host.endswith(ALLOWED_HOST):
-        headers = dict(request.headers)
-        log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url)
-        return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked. Please use `diamondgotcat.net` instead."), 403
-
 def log_reset(filepath: str = './logs/latest.log'):
     path = Path(filepath)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -226,6 +218,14 @@ def get_analytics(filepath="./data/analytics.json"):
         "country-total": data.get("country-total", {}),
         "country": data.get("country", {})
     }
+
+@app.before_request
+def limit_host_header():
+    host: str = request.host.split(':')[0]
+    if not host.endswith(ALLOWED_HOST):
+        headers = dict(request.headers)
+        log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url)
+        return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked. Please use `diamondgotcat.net` instead."), 403
 
 @app.errorhandler(400)
 def four_o_o(e):
