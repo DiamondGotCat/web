@@ -78,7 +78,7 @@ Powered by DGC-Analytics
     <div class="rounded-xl border border-gray-800">
         <div class="p-4">
             <p class="text-xl">Countrys</p>
-            <p>Analyzed using IP addresses・Provided by Cloudflare</p>
+            <p>Displaying using the GeoIP system provided by Cloudflare.</p>
         </div>
         <div class="flow-root p-4">
             <dl class="-my-3 divide-y divide-gray-200 dark:divide-gray-800 text-sm">
@@ -92,7 +92,10 @@ Powered by DGC-Analytics
         </div>
     </div>
     <div class="rounded-xl border border-gray-800">
-        <p class="p-4 text-xl">Access URLs</p>
+        <div class="p-4">
+            <p class="text-xl">Access URLs</p>
+            <p>Displaying the URLs actually viewed on this site and the number of times they were accessed.</p>
+        </div>
         <div class="flow-root p-4">
             <dl class="-my-3 divide-y divide-gray-200 dark:divide-gray-800 text-sm">
                 {% for key, value in pages.items() %}
@@ -105,7 +108,10 @@ Powered by DGC-Analytics
         </div>
     </div>
     <div class="rounded-xl border border-gray-800">
-        <p class="p-4 text-xl">Referer URLs</p>
+        <div class="p-4">
+            <p class="text-xl">Referer URLs</p>
+            <p>Displaying using the Referer header in the HTTP request.</p>
+        </div>
         <div class="flow-root p-4">
             <dl class="-my-3 divide-y divide-gray-200 dark:divide-gray-800 text-sm">
                 {% for key, value in referers.items() %}
