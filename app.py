@@ -229,70 +229,42 @@ def get_analytics(filepath="./data/analytics.json"):
 @app.errorhandler(400)
 def four_o_o(e):
     headers = dict(request.headers)
-    if "Cf-Ipcountry" in headers.keys():
-        update_analytics(country=headers["Cf-Ipcountry"])
-    else:
-        update_analytics()
     log_error(headers, "400 Bad Request", e, request.url)
     return render_template('error.html', enumber="400", ename="Bad Request")
 
 @app.errorhandler(401)
 def four_o_one(e):
     headers = dict(request.headers)
-    if "Cf-Ipcountry" in headers.keys():
-        update_analytics(country=headers["Cf-Ipcountry"])
-    else:
-        update_analytics()
     log_error(headers, "401 Unauthorized", e, request.url)
     return render_template('error.html', enumber="401", ename="Unauthorized")
 
 @app.errorhandler(403)
 def four_o_two(e):
     headers = dict(request.headers)
-    if "Cf-Ipcountry" in headers.keys():
-        update_analytics(country=headers["Cf-Ipcountry"])
-    else:
-        update_analytics()
     log_error(headers, "403 Forbidden", e, request.url)
     return render_template('error.html', enumber="403", ename="Forbidden")
 
 @app.errorhandler(404)
 def four_o_four(e):
     headers = dict(request.headers)
-    if "Cf-Ipcountry" in headers.keys():
-        update_analytics(country=headers["Cf-Ipcountry"])
-    else:
-        update_analytics()
     log_error(headers, "404 Not Found", e, request.url)
     return render_template('error.html', enumber="404", ename="Not Found")
 
 @app.errorhandler(414)
 def four_one_four(e):
     headers = dict(request.headers)
-    if "Cf-Ipcountry" in headers.keys():
-        update_analytics(country=headers["Cf-Ipcountry"])
-    else:
-        update_analytics()
     log_error(headers, "414 URI Too Long", e, request.url)
     return render_template('error.html', enumber="414", ename="URI Too Long")
 
 @app.errorhandler(500)
 def five_o_o(e):
     headers = dict(request.headers)
-    if "Cf-Ipcountry" in headers.keys():
-        update_analytics(country=headers["Cf-Ipcountry"])
-    else:
-        update_analytics()
     log_error(headers, "500 Internal Server Error", e, request.url)
     return render_template('error.html', enumber="500", ename="Internal Server Error")
 
 @app.errorhandler(503)
 def five_o_three(e):
     headers = dict(request.headers)
-    if "Cf-Ipcountry" in headers.keys():
-        update_analytics(country=headers["Cf-Ipcountry"])
-    else:
-        update_analytics()
     log_error(headers, "503 Service Unavailable", e, request.url)
     return render_template('error.html', enumber="503", ename="Service Unavailable")
 
