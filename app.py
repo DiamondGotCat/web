@@ -119,6 +119,19 @@ def access_logs_to_pages(filepath="./logs/access.json"):
     with open(filepath, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
+    url_counter = Counter()
+
+    for entry in data.values():
+        url = entry.get("url")
+        if url:
+            url_counter[url] += 1
+
+    return dict(url_counter)
+
+def access_logs_to_referers(filepath="./logs/access.json"):
+    with open(filepath, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
     referer_counter = Counter()
     
     for entry in data.values():
@@ -128,19 +141,6 @@ def access_logs_to_pages(filepath="./logs/access.json"):
             referer_counter[referer] += 1
 
     return dict(referer_counter)
-
-def access_logs_to_referers(filepath="./logs/access.json"):
-    with open(filepath, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-
-    url_counter = Counter()
-
-    for entry in data.values():
-        url = entry.get("url")
-        if url:
-            url_counter[url] += 1
-
-    return dict(url_counter)
 
 def update_analytics(country: str = "XX", date: str = None, amount: int = 1, filepath: str = './data/analytics.json'):
     if date is None:
