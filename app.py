@@ -348,6 +348,8 @@ def analytics_page():
             country_name = Countrys[country_id]
         new_country_total[country_id] = [country_name, got_country_total[country]]
 
+    new_country_total = dict(sorted(new_country_total.items(), key=lambda item: item[1][1], reverse=True))
+
     for timestamp_str, count in analytics["counter"].items():
         if timestamp_str.startswith(today):
             today_labels.append(timestamp_str)
@@ -355,6 +357,9 @@ def analytics_page():
 
     pages = access_logs_to_pages()
     referers = access_logs_to_referers()
+
+    pages = dict(sorted(pages.items(), key=lambda item: item[1], reverse=True))
+    referers = dict(sorted(referers.items(), key=lambda item: item[1], reverse=True))
 
     return render_template(
             'analytics.html',
