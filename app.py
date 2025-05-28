@@ -232,24 +232,24 @@ def limit_host_header():
         x_forwarded_for_arrow = (f"{x_forwarded_for} -> " if x_forwarded_for != "NOT_PROXY" else "")
         if (not host.endswith(ALLOWED_HOST)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
             log_text("----- FOUND IN BLACKLIST: NOT_OFFICIAL_DOMAIN -----")
-            log_text(f"{x_forwarded_for_arrow}{request.remote_addr} -> [red](FOUND IN BLACKLIST)[/red] {request.url}")
+            log_text(f"{x_forwarded_for_arrow}{request.remote_addr} -> [red][FOUND IN BLACKLIST][/red] {request.url}")
             log_text("")
             log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: NOT_OFFICIAL_DOMAIN"), 403
         
         elif request.remote_addr in blacklist:
             log_text(f"----- FOUND IN BLACKLIST: {request.remote_addr} -----")
-            log_text(f"{x_forwarded_for_arrow}[red](FOUND IN BLACKLIST)[/red] {request.remote_addr} -> {request.url}")
+            log_text(f"{x_forwarded_for_arrow}[red][FOUND IN BLACKLIST][/red] {request.remote_addr} -> {request.url}")
             log_text("")
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {request.remote_addr}"), 403
 
         elif x_forwarded_for in blacklist:
             log_text(f"----- FOUND IN BLACKLIST: {x_forwarded_for} -----")
-            log_text(f"[red](FOUND IN BLACKLIST)[/red] {x_forwarded_for_arrow}{request.remote_addr} -> {request.url}")
+            log_text(f"[red][FOUND IN BLACKLIST][/red] {x_forwarded_for_arrow}{request.remote_addr} -> {request.url}")
             log_text("")
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {x_forwarded_for}"), 403
         else:
-            log_text(f"[blue](NEW ACCESS)[/blue] {x_forwarded_for_arrow}{request.remote_addr} -> {request.url}")
+            log_text(f"[blue][NEW ACCESS][/blue] {x_forwarded_for_arrow}{request.remote_addr} -> {request.url}")
             log_text("")
 
 @app.errorhandler(400)
