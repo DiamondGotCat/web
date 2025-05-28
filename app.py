@@ -371,7 +371,7 @@ try:
         return render_template('index.html', accessNo=str(analytics["totalCount"]))
 
     @app.route('/error/<path:code>/')
-    def index_page(code):
+    def error_page(code):
         return render_template('error.html', enumber=code, ename=f"Error Page (/error/{code}/)")
 
     @app.route('/api/v1/')
