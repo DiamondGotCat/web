@@ -287,17 +287,18 @@ def limit_host_header():
         current_time = str(datetime.now(dt.timezone.utc))
         x_forwarded_for = headers.get("X-Forwarded-For", "NOT_PROXY")
         x_forwarded_for_arrow = (f"{x_forwarded_for} -> " if x_forwarded_for != "NOT_PROXY" else "")
+        x_forwarded_for_arrow_blocked = (f"[{x_forwarded_for}] -> " if x_forwarded_for != "NOT_PROXY" else "")
 
         if request.remote_addr in blacklist:
-            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}(FOUND IN BLACKLIST) {request.remote_addr} -> {host}{request.full_path}")
+            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow} [{request.remote_addr}] -> {host}{request.full_path}")
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {request.remote_addr}"), 403
 
         elif x_forwarded_for in blacklist:
-            log_text(f"[BLOCKED] {current_time} (FOUND IN BLACKLIST) {x_forwarded_for_arrow}{request.remote_addr} -> {host}{request.full_path}")
+            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow_blocked}{request.remote_addr} -> {host}{request.full_path}")
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {x_forwarded_for}"), 403
 
         elif (not any(host.endswith(allowed) for allowed in domains)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
-            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> (FOUND IN BLACKLIST) {host}{request.full_path}")
+            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> [{host}{request.full_path}]")
             log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
 
             to_block = x_forwarded_for if x_forwarded_for != "NOT_PROXY" else request.remote_addr
