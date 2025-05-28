@@ -294,11 +294,11 @@ def limit_host_header():
     host = request.host.split(':')[0]
     if os.path.isfile("./data/blacklist.json"):
         with open("./data/blacklist.json", 'r', encoding='utf-8') as f:
-            blacklist: list = json.load(file)
+            blacklist: list = json.load(f)
             f.close()
         
         with open("./data/domains.json", 'r', encoding='utf-8') as f:
-            domains: list = json.load(file)
+            domains: list = json.load(f)
             f.close()
 
         current_time = str(datetime.now(dt.timezone.utc))
