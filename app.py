@@ -367,7 +367,11 @@ def index_page():
     analytics = get_analytics()
     return render_template('index.html', accessNo=str(analytics["totalCount"]))
 
-@app.route('/api/v1/')
+@app.route('/error/<path:code>')
+def index_page(code):
+    return render_template('error.html', enumber=code, ename=f"Error Page (/error/{code}/)")
+
+@app.route('/api/v1')
 def api_index():
     headers = dict(request.headers)
     log_access(headers, request.url, request)
