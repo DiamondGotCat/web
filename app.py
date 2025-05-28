@@ -29,6 +29,7 @@ try:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open('w', encoding='utf-8') as f:
             f.write(log_initial_text + '\n')
+            f.close()
 
     def log_text(content, filepath: str = './logs/latest.log'):
         path = Path(filepath)
@@ -41,6 +42,7 @@ try:
 
         with path.open('a', encoding='utf-8') as f:
             f.writelines(lines)
+            f.close()
         
         if content != "":
             print(content)
@@ -53,6 +55,7 @@ try:
         if path.exists():
             with path.open('r', encoding='utf-8') as f:
                 data = json.load(f)
+                f.close()
         else:
             data = {}
 
@@ -79,6 +82,7 @@ try:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open('w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
+            f.close()
         
     def log_error(headers, error_str: str, error_e, url, request_obj, date: Optional[datetime] = None, filepath: str = './logs/error.json'):
         if date is None:
@@ -88,6 +92,7 @@ try:
         if path.exists():
             with path.open('r', encoding='utf-8') as f:
                 data = json.load(f)
+                f.close()
         else:
             data = {}
 
@@ -114,10 +119,12 @@ try:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open('w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
+            f.close()
 
     def access_logs_to_pages(filepath="./logs/access.json"):
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
+            f.close()
 
         url_counter = Counter()
 
@@ -131,6 +138,7 @@ try:
     def access_logs_to_referers(filepath="./logs/access.json"):
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
+            f.close()
 
         referer_counter = Counter()
         
@@ -155,6 +163,7 @@ try:
         if path.exists():
             with open(filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
+                f.close()
         else:
             data = {
                 "counter-total": 0,
@@ -173,11 +182,13 @@ try:
 
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
+            f.close()
 
     def get_analytics(filepath="./data/analytics.json"):
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
+                f.close()
         except (FileNotFoundError, json.JSONDecodeError):
             return {
                 "totalCount": 0,
@@ -225,14 +236,16 @@ try:
 
     def add_to_blacklist(ip):
         if os.path.isfile("./data/blacklist.json"):
-            with open("./data/blacklist.json", 'r', encoding='utf-8') as file:
-                blacklist: list = json.load(file)
+            with open("./data/blacklist.json", 'r', encoding='utf-8') as f:
+                blacklist: list = json.load(f)
+                f.close()
         else:
             blacklist = []
         new_blacklist = blacklist
         new_blacklist.append(ip)
         with open('./data/blacklist.json', 'w', encoding='utf-8') as f:
             json.dump(new_blacklist, f, ensure_ascii=False, indent=4)
+            f.close()
 
     @app.before_request
     def limit_host_header():
@@ -284,8 +297,11 @@ try:
         if os.path.isfile("./data/blacklist.json"):
             with open("./data/blacklist.json", 'r', encoding='utf-8') as file:
                 blacklist: list = json.load(file)
+                f.close()
+            
             with open("./data/domains.json", 'r', encoding='utf-8') as file:
                 domains: list = json.load(file)
+                f.close()
 
             current_time = str(datetime.now(dt.timezone.utc))
             x_forwarded_for = headers.get("X-Forwarded-For", "NOT_PROXY")
@@ -501,6 +517,7 @@ try:
 
 except KeyboardInterrupt:
     pass
+
 except Exception as e:
     error_uuid = str(uuid.uuid4())
     error_filepath = f"./logs/archives/error_{error_uuid}.log"
@@ -508,4 +525,5 @@ except Exception as e:
     tb_str = traceback.format_exc()
     with error_filepath_obj.open('w', encoding='utf-8') as f:
         f.write(tb_str + '\n')
-    print(f"System Error, FILE: {error_filepath}")
+        f.close()
+    print(f"System Error, Log file is here: {error_filepath}")
