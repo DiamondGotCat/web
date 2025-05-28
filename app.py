@@ -260,7 +260,7 @@ def limit_host_header():
     count = len(ip_queue)
     if count >= 101:
         log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}(FOUND IN BLACKLIST) {request.remote_addr} -> {host}{request.full_path}")
-        return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {request.remote_addr}"), 403
+        return render_template('error.html', enumber="403", ename=f"You are in naughty list: {request.remote_addr}"), 403
 
     if ip in ip_block_info:
         if now < ip_block_info[ip]:
@@ -273,7 +273,7 @@ def limit_host_header():
     if count >= 80:
         add_to_blacklist(ip)
         log_text(f"[BLOCKED] IP {ip} exceeded 100 req/min -> Blacklisted")
-        return render_template('error.html', enumber="429", ename="You are added to blacklist"), 429
+        return render_template('error.html', enumber="429", ename="You are added to naughty list"), 429
     elif count >= 70:
         ip_block_info[ip] = now + timedelta(hours=1)
         log_text(f"[BLOCKED] IP {ip} blocked for 1 hour (>=80 req/min)")
@@ -308,20 +308,14 @@ def limit_host_header():
 
         if request.remote_addr in blacklist:
             log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow} [{request.remote_addr}] -> {host}{request.full_path}")
-            return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {request.remote_addr}"), 403
+            return render_template('error.html', enumber="403", ename=f"You are in naughty list: {request.remote_addr}"), 403
 
         elif x_forwarded_for in blacklist:
             log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow_blocked}{request.remote_addr} -> {host}{request.full_path}")
-            return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {x_forwarded_for}"), 403
+            return render_template('error.html', enumber="403", ename=f"You are in naughty list: {x_forwarded_for}"), 403
 
         elif (not any(host.endswith(allowed) for allowed in domains)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
             log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> [{host}{request.full_path}]")
-            log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
-
-            to_block = x_forwarded_for if x_forwarded_for != "NOT_PROXY" else request.remote_addr
-            add_to_blacklist(to_block)
-            log_text(f"[BLOCKED] Added to Blacklist: {to_block}")
-
             return render_template('error.html', enumber="403", ename=f"ERROR ID: NOT_OFFICIAL_DOMAIN"), 403
         
         else:
