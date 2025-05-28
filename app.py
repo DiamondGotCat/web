@@ -10,10 +10,12 @@ from markupsafe import escape
 from typing import Optional
 from countrys import Countrys
 from collections import Counter
+import argparse
+import shutil
 
 app = Flask(__name__)
-ALLOWED_HOST = 'diamondgotcat.net'
-log_initial_text = f"STARTED - Working on {ALLOWED_HOST}"
+secret_key = str(uuid.uuid4())
+log_initial_text = f"[1ST LINE] Initial Text"
 
 def log_reset(filepath: str = './logs/latest.log'):
     path = Path(filepath)
@@ -221,10 +223,13 @@ def limit_host_header():
     if os.path.isfile("./data/blacklist.json"):
         with open("./data/blacklist.json", 'r', encoding='utf-8') as file:
             blacklist: list = json.load(file)
+        with open("./data/domains.json", 'r', encoding='utf-8') as file:
+            domains: list = json.load(file)
         current_time = str(datetime.now(dt.timezone.utc))
         x_forwarded_for = headers.get("X-Forwarded-For", "NOT_PROXY")
         x_forwarded_for_arrow = (f"{x_forwarded_for} -> " if x_forwarded_for != "NOT_PROXY" else "")
-        if (not host.endswith(ALLOWED_HOST)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
+
+        if (not any(host.endswith(allowed) for allowed in domains)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
             log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> (FOUND IN BLACKLIST) {host}{request.full_path}")
             log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: NOT_OFFICIAL_DOMAIN"), 403
@@ -237,7 +242,7 @@ def limit_host_header():
             log_text(f"[BLOCKED] {current_time} (FOUND IN BLACKLIST) {x_forwarded_for_arrow}{request.remote_addr} -> {host}{request.full_path}")
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {x_forwarded_for}"), 403
         else:
-            log_text(f"[PASSED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> {request.full_path}")
+            log_text(f"[PASSED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> {host}{request.full_path}")
 
 @app.errorhandler(400)
 def four_o_o(e):
@@ -394,11 +399,14 @@ def analytics_page():
         )
 
 if __name__ == "__main__":
+    if os.path.isfile("./logs/latest.log"):
+        log_uuid = str(uuid.uuid4())
+        shutil.copy2("./logs/latest.log", f"./logs/archives/{log_uuid}.log")
     log_reset()
+    
     try:
+        log_text("[START] Web Server has Started!")
+        log_text(f"[SECRET KEY] Secret Key: {secret_key}")
         app.run("0.0.0.0", 80)
     except KeyboardInterrupt:
-        log_uuid = str(uuid.uuid4())
-        os.rename("./logs/latest.log", f"./logs/archives/{log_uuid}.log")
-        print(f"Process stopped. Latest log file are here: {f"./logs/archives/{log_uuid}.log"}")
-        print("See you next time!")
+        pass
