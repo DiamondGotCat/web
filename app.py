@@ -245,7 +245,7 @@ def add_to_blacklist(ip):
         json.dump(new_blacklist, f, ensure_ascii=False, indent=4)
         f.close()
 
-def build_route_str(request_obj, blocked_location=None):
+def build_route_str(request_obj, issue_location=None):
     headers = dict(request_obj.headers)
     hostname = request.host.split(':')[0]
     full_path = request_obj.full_path
@@ -255,29 +255,29 @@ def build_route_str(request_obj, blocked_location=None):
 
     isProxy = False if x_forwarded_for == None else True
     if isProxy:
-        if blocked_location == None:
+        if issue_location == None:
             return f"{x_forwarded_for} -> {remote_addr} -> {hostname}{full_path}"
         
-        elif blocked_location == "remote":
+        elif issue_location == "remote":
             return f"[{x_forwarded_for}] -> {remote_addr} -> {hostname}{full_path}"
         
-        elif blocked_location == "proxy":
+        elif issue_location == "proxy":
             return f"{x_forwarded_for} -> [{remote_addr}] -> {hostname}{full_path}"
         
-        elif blocked_location == "hostname":
+        elif issue_location == "hostname":
             return f"{x_forwarded_for} -> {remote_addr} -> [{hostname}{full_path}]"
         
     else:
-        if blocked_location == None:
+        if issue_location == None:
             return f"{remote_addr} -> NO PROXY -> {hostname}{full_path}"
         
-        elif blocked_location == "remote":
+        elif issue_location == "remote":
             return f"[{remote_addr}] -> NO PROXY -> {hostname}{full_path}"
         
-        elif blocked_location == "proxy":
+        elif issue_location == "proxy":
             return f"{remote_addr} -> [NO PROXY] -> {hostname}{full_path}"
         
-        elif blocked_location == "hostname":
+        elif issue_location == "hostname":
             return f"{remote_addr} -> NO PROXY -> [{hostname}{full_path}]"
 
 @app.before_request
@@ -287,6 +287,7 @@ def limit_host_header():
     host = request.host.split(':')[0]
 
     ip = headers.get("X-Forwarded-For", request.remote_addr)
+    current_time = str(datetime.now(dt.timezone.utc))
 
     ip_queue = ip_request_log[ip]
     while ip_queue and (now - ip_queue[0]).total_seconds() > 60:
@@ -337,7 +338,6 @@ def limit_host_header():
             domains: list = json.load(f)
             f.close()
 
-        current_time = str(datetime.now(dt.timezone.utc))
         x_forwarded_for = headers.get("X-Forwarded-For", None)
         isProxy = False if x_forwarded_for == None else True
 
@@ -376,42 +376,77 @@ def limit_host_header():
 def four_o_o(e):
     headers = dict(request.headers)
     log_error(headers, "400 Bad Request", e, request.url, request)
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request, "hostname")
+    log_text(f"[ERROR] {current_time} {route_str}")
+
     return render_template('error.html', enumber="400", ename="Bad Request")
 
 @app.errorhandler(401)
 def four_o_one(e):
     headers = dict(request.headers)
     log_error(headers, "401 Unauthorized", e, request.url, request)
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request, "hostname")
+    log_text(f"[ERROR] {current_time} {route_str}")
+
     return render_template('error.html', enumber="401", ename="Unauthorized")
 
 @app.errorhandler(403)
 def four_o_two(e):
     headers = dict(request.headers)
     log_error(headers, "403 Forbidden", e, request.url, request)
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request, "hostname")
+    log_text(f"[ERROR] {current_time} {route_str}")
+
     return render_template('error.html', enumber="403", ename="Forbidden")
 
 @app.errorhandler(404)
 def four_o_four(e):
     headers = dict(request.headers)
     log_error(headers, "404 Not Found", e, request.url, request)
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request, "hostname")
+    log_text(f"[ERROR] {current_time} {route_str}")
+
     return render_template('error.html', enumber="404", ename="Not Found")
 
 @app.errorhandler(414)
 def four_one_four(e):
     headers = dict(request.headers)
     log_error(headers, "414 URI Too Long", e, request.url, request)
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request, "hostname")
+    log_text(f"[ERROR] {current_time} {route_str}")
+
     return render_template('error.html', enumber="414", ename="URI Too Long")
 
 @app.errorhandler(500)
 def five_o_o(e):
     headers = dict(request.headers)
     log_error(headers, "500 Internal Server Error", e, request.url, request)
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request, "hostname")
+    log_text(f"[ERROR] {current_time} {route_str}")
+
     return render_template('error.html', enumber="500", ename="Internal Server Error")
 
 @app.errorhandler(503)
 def five_o_three(e):
     headers = dict(request.headers)
     log_error(headers, "503 Service Unavailable", e, request.url, request)
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request, "hostname")
+    log_text(f"[ERROR] {current_time} {route_str}")
+    
     return render_template('error.html', enumber="503", ename="Service Unavailable")
 
 def shutdown_later(delay=1):
