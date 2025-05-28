@@ -163,9 +163,6 @@ def update_analytics(country: str = "XX", date: str = None, amount: int = 1, fil
     data["country"][date_str][country] = data["country"][date_str].get(country, 0) + amount
 
     with open(filepath, 'w', encoding='utf-8') as f:
-        log_text("----- UPDATE DGC-ANALYTICS DATA -----")
-        log_text(json.dumps(data, indent=4))
-        log_text("")
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 def get_analytics(filepath="./data/analytics.json"):
