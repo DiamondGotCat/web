@@ -10,7 +10,7 @@ from markupsafe import escape
 from typing import Optional
 from countrys import Countrys
 from collections import Counter
-from rich import print
+import rich
 
 app = Flask(__name__)
 ALLOWED_HOST = 'diamondgotcat.net'
@@ -34,7 +34,8 @@ def log_text(content, filepath: str = './logs/latest.log'):
     with path.open('a', encoding='utf-8') as f:
         f.writelines(lines)
     
-    print(content)
+    if content != "":
+        rich.print(content)
 
 def log_access(headers: dict, url, request_obj, date: Optional[datetime] = None, filepath: str = './logs/access.json'):
     if date is None:
