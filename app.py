@@ -34,7 +34,7 @@ def log_text(content, filepath: str = './logs/latest.log'):
     
     print(content)
 
-def log_access(headers: dict, url, date: Optional[datetime] = None, filepath: str = './logs/access.json'):
+def log_access(headers: dict, url, request_obj, date: Optional[datetime] = None, filepath: str = './logs/access.json'):
     if date is None:
         date = datetime.now(dt.timezone.utc)
 
@@ -56,6 +56,7 @@ def log_access(headers: dict, url, date: Optional[datetime] = None, filepath: st
 
     new_entry = {
         "id": headers.get("Cf-Ray"),
+        "ip": request_obj.remote_addr,
         "number": access_number,
         "datetime": iso_datetime,
         "url": url,
@@ -71,7 +72,7 @@ def log_access(headers: dict, url, date: Optional[datetime] = None, filepath: st
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     
-def log_error(headers, error_str: str, error_e, url, date: Optional[datetime] = None, filepath: str = './logs/error.json'):
+def log_error(headers, error_str: str, error_e, url, request_obj, date: Optional[datetime] = None, filepath: str = './logs/error.json'):
     if date is None:
         date = datetime.now(dt.timezone.utc)
 
@@ -91,6 +92,7 @@ def log_error(headers, error_str: str, error_e, url, date: Optional[datetime] = 
 
     new_entry = {
         "id": headers.get("Cf-Ray"),
+        "ip": request_obj.remote_addr,
         "number": access_number,
         "error": str(error_e),
         "code": error_str,
@@ -227,49 +229,49 @@ def limit_host_header():
         log_text("----- NOT_OFFICIAL_DOMAIN -----")
         log_text(request.url)
         log_text("")
-        log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url)
+        log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
         return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked this request. Please use `diamondgotcat.net` instead."), 403
 
 @app.errorhandler(400)
 def four_o_o(e):
     headers = dict(request.headers)
-    log_error(headers, "400 Bad Request", e, request.url)
+    log_error(headers, "400 Bad Request", e, request.url, request)
     return render_template('error.html', enumber="400", ename="Bad Request")
 
 @app.errorhandler(401)
 def four_o_one(e):
     headers = dict(request.headers)
-    log_error(headers, "401 Unauthorized", e, request.url)
+    log_error(headers, "401 Unauthorized", e, request.url, request)
     return render_template('error.html', enumber="401", ename="Unauthorized")
 
 @app.errorhandler(403)
 def four_o_two(e):
     headers = dict(request.headers)
-    log_error(headers, "403 Forbidden", e, request.url)
+    log_error(headers, "403 Forbidden", e, request.url, request)
     return render_template('error.html', enumber="403", ename="Forbidden")
 
 @app.errorhandler(404)
 def four_o_four(e):
     headers = dict(request.headers)
-    log_error(headers, "404 Not Found", e, request.url)
+    log_error(headers, "404 Not Found", e, request.url, request)
     return render_template('error.html', enumber="404", ename="Not Found")
 
 @app.errorhandler(414)
 def four_one_four(e):
     headers = dict(request.headers)
-    log_error(headers, "414 URI Too Long", e, request.url)
+    log_error(headers, "414 URI Too Long", e, request.url, request)
     return render_template('error.html', enumber="414", ename="URI Too Long")
 
 @app.errorhandler(500)
 def five_o_o(e):
     headers = dict(request.headers)
-    log_error(headers, "500 Internal Server Error", e, request.url)
+    log_error(headers, "500 Internal Server Error", e, request.url, request)
     return render_template('error.html', enumber="500", ename="Internal Server Error")
 
 @app.errorhandler(503)
 def five_o_three(e):
     headers = dict(request.headers)
-    log_error(headers, "503 Service Unavailable", e, request.url)
+    log_error(headers, "503 Service Unavailable", e, request.url, request)
     return render_template('error.html', enumber="503", ename="Service Unavailable")
 
 @app.route('/')
@@ -279,7 +281,7 @@ def index_page():
         update_analytics(country=headers["Cf-Ipcountry"])
     else:
         update_analytics()
-    log_access(headers, request.url)
+    log_access(headers, request.url, request)
     analytics = get_analytics()
     return render_template('index.html', accessNo=str(analytics["totalCount"]))
 
@@ -290,7 +292,7 @@ def api_index():
         update_analytics(country=headers["Cf-Ipcountry"])
     else:
         update_analytics()
-    log_access(headers, request.url)
+    log_access(headers, request.url, request)
     analytics = get_analytics()
     access_number = analytics["totalCount"]
     pong_data = {
@@ -314,7 +316,7 @@ def zeta_index_page():
         update_analytics(country=headers["Cf-Ipcountry"])
     else:
         update_analytics()
-    log_access(headers, request.url)
+    log_access(headers, request.url, request)
     return render_template('zeta-index.html')
 
 @app.route('/burners/')
@@ -324,7 +326,7 @@ def burners_page():
         update_analytics(country=headers["Cf-Ipcountry"])
     else:
         update_analytics()
-    log_access(headers, request.url)
+    log_access(headers, request.url, request)
     return render_template('burners.html')
 
 @app.route('/burners/img/<path:filename>')
@@ -334,7 +336,7 @@ def burners_img(filename):
 @app.route('/analytics/')
 def analytics_page():
     headers = dict(request.headers)
-    log_access(headers, request.url)
+    log_access(headers, request.url, request)
     analytics = get_analytics()
 
     today = datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
