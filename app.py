@@ -467,6 +467,11 @@ def index_page():
 
 @app.route('/error/<path:code>/')
 def error_page(code):
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request, "hostname")
+    log_text(f"[WARN] {current_time} {route_str} (Error Page)")
+
     return render_template('error.html', enumber=code, ename=f"Error Page"), int(code)
 
 @app.route('/api/v1/')
