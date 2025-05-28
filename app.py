@@ -258,21 +258,21 @@ def limit_host_header():
     
     if count >= 100:
         add_to_blacklist(ip)
-        log_text(f"[BLACKLIST] IP {ip} exceeded 100 req/min -> Blacklisted")
+        log_text(f"[BLOCKED] IP {ip} exceeded 100 req/min -> Blacklisted")
         return render_template('error.html', enumber="429", ename="You are added to blacklist"), 429
-    elif count >= 80:
+    elif count >= 90:
         ip_block_info[ip] = now + timedelta(hours=1)
         log_text(f"[BLOCKED] IP {ip} blocked for 1 hour (>=80 req/min)")
         return render_template('error.html', enumber="429", ename="You are blocked for 3600s"), 429
-    elif count >= 60:
+    elif count >= 80:
         ip_block_info[ip] = now + timedelta(minutes=10)
         log_text(f"[BLOCKED] IP {ip} blocked for 10 minutes (>=60 req/min)")
         return render_template('error.html', enumber="429", ename="You are blocked for 600s"), 429
-    elif count >= 40:
+    elif count >= 70:
         ip_block_info[ip] = now + timedelta(minutes=5)
         log_text(f"[BLOCKED] IP {ip} blocked for 5 minutes (>=40 req/min)")
         return render_template('error.html', enumber="429", ename="You are blocked for 300s"), 429
-    elif count >= 20:
+    elif count >= 60:
         ip_block_info[ip] = now + timedelta(seconds=30)
         log_text(f"[BLOCKED] IP {ip} blocked for 30 seconds (>=20 req/min)")
         return render_template('error.html', enumber="429", ename="You are blocked for 30s"), 429
@@ -302,7 +302,7 @@ def limit_host_header():
 
             to_block = x_forwarded_for if x_forwarded_for != "NOT_PROXY" else request.remote_addr
             add_to_blacklist(to_block)
-            log_text(f"[BLACKLIST] Added to Blacklist: {to_block}")
+            log_text(f"[BLOCKED] Added to Blacklist: {to_block}")
 
             return render_template('error.html', enumber="403", ename=f"ERROR ID: NOT_OFFICIAL_DOMAIN"), 403
         
