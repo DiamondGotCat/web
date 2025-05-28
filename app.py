@@ -18,7 +18,7 @@ import traceback
 
 app = Flask(__name__)
 secret_key = str(uuid.uuid4())
-log_initial_text = f"[1ST LINE] Initial Text"
+log_initial_text = f"[INFO] Logging Started"
 ip_request_log = defaultdict(lambda: deque())
 ip_block_info = {}
 
