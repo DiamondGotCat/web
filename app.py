@@ -228,16 +228,16 @@ def limit_host_header():
         x_forwarded_for = headers.get("X-Forwarded-For", "NOT_PROXY")
         x_forwarded_for_arrow = (f"{x_forwarded_for} -> " if x_forwarded_for != "NOT_PROXY" else "")
         if (not host.endswith(ALLOWED_HOST)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
-            log_text(f"[BLOCKED] {x_forwarded_for_arrow}{request.remote_addr} -> (FOUND IN BLACKLIST) {request.full_path}")
+            log_text(f"[BLOCKED] {x_forwarded_for_arrow}{request.remote_addr} -> (FOUND IN BLACKLIST) {host}{request.full_path}")
             log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: NOT_OFFICIAL_DOMAIN"), 403
         
         elif request.remote_addr in blacklist:
-            log_text(f"[BLOCKED] {x_forwarded_for_arrow}(FOUND IN BLACKLIST) {request.remote_addr} -> {request.full_path}")
+            log_text(f"[BLOCKED] {x_forwarded_for_arrow}(FOUND IN BLACKLIST) {request.remote_addr} -> {host}{request.full_path}")
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {request.remote_addr}"), 403
 
         elif x_forwarded_for in blacklist:
-            log_text(f"[BLOCKED] (FOUND IN BLACKLIST) {x_forwarded_for_arrow}{request.remote_addr} -> {request.full_path}")
+            log_text(f"[BLOCKED] (FOUND IN BLACKLIST) {x_forwarded_for_arrow}{request.remote_addr} -> {host}{request.full_path}")
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {x_forwarded_for}"), 403
         else:
             log_text(f"[PASSED] (NEW ACCESS) {x_forwarded_for_arrow}{request.remote_addr} -> {request.full_path}")
