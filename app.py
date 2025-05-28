@@ -227,7 +227,7 @@ def limit_host_header():
     if not host.endswith(ALLOWED_HOST):
         headers = dict(request.headers)
         log_text("----- NOT_OFFICIAL_DOMAIN -----")
-        log_text(request.url)
+        log_text(f"{request.remote_addr} -> {request.url}")
         log_text("")
         log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
         return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked this request. Please use `diamondgotcat.net` instead."), 403
