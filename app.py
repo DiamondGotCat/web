@@ -501,7 +501,9 @@ if __name__ == "__main__":
         pass
     except Exception as e:
         error_uuid = str(uuid.uuid4())
-        error_filepath = Path(f"./logs/archives/error_{error_uuid}.log")
+        error_filepath = f"./logs/archives/error_{error_uuid}.log"
+        error_filepath_obj = Path(error_filepath)
         tb_str = traceback.format_exc()
-        with error_filepath.open('w', encoding='utf-8') as f:
+        with error_filepath_obj.open('w', encoding='utf-8') as f:
             f.write(tb_str + '\n')
+        print(f"System Error, FILE: {error_filepath}")
