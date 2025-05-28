@@ -367,10 +367,6 @@ def limit_host_header():
             route_str = build_route_str(request, "hostname")
             log_text(f"[BLOCK] {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"This URL does not appear to be official."), 403
-        
-        else:
-            route_str = build_route_str(request)
-            log_text(f"[PASS] {current_time} {route_str}")
 
 @app.errorhandler(400)
 def four_o_o(e):
@@ -446,7 +442,7 @@ def five_o_three(e):
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request, "hostname")
     log_text(f"[ERROR] {current_time} {route_str}")
-    
+
     return render_template('error.html', enumber="503", ename="Service Unavailable")
 
 def shutdown_later(delay=1):
@@ -462,6 +458,11 @@ def index_page():
         update_analytics()
     log_access(headers, request.url, request)
     analytics = get_analytics()
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[OK] {current_time} {route_str}")
+
     return render_template('index.html', accessNo=str(analytics["totalCount"]))
 
 @app.route('/error/<path:code>/')
@@ -478,6 +479,11 @@ def api_index():
         "code": 0,
         "content": "Pong!"
     }
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[OK] {current_time} {route_str}")
+
     return jsonify(pong_data)
 
 @app.route('/api/v1/stop/<path:key>')
@@ -490,20 +496,38 @@ def api_stop(key):
             "code": 0,
             "content": "Okay, Stopping Now!"
         }
+
+        current_time = str(datetime.now(dt.timezone.utc))
+        route_str = build_route_str(request)
+        log_text(f"[OK] {current_time} {route_str}")
+
         return jsonify(pong_data)
     else:
         pong_data = {
             "code": 1,
             "content": "Need Secret Key for This Action"
         }
+
+        current_time = str(datetime.now(dt.timezone.utc))
+        route_str = build_route_str(request, "remote")
+        log_text(f"[BLOCK] {current_time} {route_str}")
+
         return jsonify(pong_data)
 
 @app.route('/icons/<path:filename>')
 def icon_return(filename):
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[OK] {current_time} {route_str}")
+
     return send_from_directory('static/icons', filename)
 
 @app.route('/favicon.ico')
 def favicon_return():
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[OK] {current_time} {route_str}")
+
     return send_from_directory('static/favicon', "favicon.ico")
 
 @app.route('/zeta/')
@@ -514,6 +538,11 @@ def zeta_index_page():
     else:
         update_analytics()
     log_access(headers, request.url, request)
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[OK] {current_time} {route_str}")
+
     return render_template('zeta-index.html')
 
 @app.route('/burners/')
@@ -524,10 +553,19 @@ def burners_page():
     else:
         update_analytics()
     log_access(headers, request.url, request)
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[OK] {current_time} {route_str}")
+
     return render_template('burners.html')
 
 @app.route('/burners/img/<path:filename>')
 def burners_img(filename):
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[OK] {current_time} {route_str}")
+
     return send_from_directory('static/burners', filename)
 
 @app.route('/analytics/')
@@ -563,6 +601,10 @@ def analytics_page():
 
     pages = dict(sorted(pages.items(), key=lambda item: item[1], reverse=True))
     referers = dict(sorted(referers.items(), key=lambda item: item[1], reverse=True))
+
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[OK] {current_time} {route_str}")
 
     return render_template(
             'analytics.html',
