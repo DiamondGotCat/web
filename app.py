@@ -67,9 +67,6 @@ def log_access(headers: dict, url, request_obj, date: Optional[datetime] = None,
     data[cf_ray] = new_entry
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    log_text("----- NEW ACCESS -----")
-    log_text(json.dumps(new_entry, indent=4))
-    log_text("")
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     
@@ -105,9 +102,6 @@ def log_error(headers, error_str: str, error_e, url, request_obj, date: Optional
     data[reqid] = new_entry
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    log_text("----- ACCESS ERROR -----")
-    log_text(json.dumps(new_entry, indent=4))
-    log_text("")
     with path.open('w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
@@ -237,17 +231,19 @@ def limit_host_header():
             log_text(f"{x_forwarded_for_arrow}{request.remote_addr} -> (FOUND IN BLACKLIST) {request.url}")
             log_text("")
             log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
-            return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked this request. Please use `diamondgotcat.net` instead."), 403
+            return render_template('error.html', enumber="403", ename=f"Found in Blacklist: NOT_OFFICIAL_DOMAIN"), 403
         
-        if request.remote_addr in blacklist:
+        elif request.remote_addr in blacklist:
             log_text(f"----- FOUND IN BLACKLIST: {request.remote_addr} -----")
             log_text(f"{x_forwarded_for_arrow}(FOUND IN BLACKLIST) {request.remote_addr} -> {request.url}")
             log_text("")
+            return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {request.remote_addr}"), 403
 
-        if x_forwarded_for in blacklist:
+        elif x_forwarded_for in blacklist:
             log_text(f"----- FOUND IN BLACKLIST: {x_forwarded_for} -----")
             log_text(f"(FOUND IN BLACKLIST) {x_forwarded_for_arrow}{request.remote_addr} -> {request.url}")
             log_text("")
+            return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {x_forwarded_for}"), 403
 
 @app.errorhandler(400)
 def four_o_o(e):
