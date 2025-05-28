@@ -389,7 +389,7 @@ def index_page():
 
 @app.route('/error/<path:code>/')
 def error_page(code):
-    return render_template('error.html', enumber=code, ename=f"Error Page")
+    return render_template('error.html', enumber=code, ename=f"Error Page"), int(code)
 
 @app.route('/api/v1/')
 def api_index():
