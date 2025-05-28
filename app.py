@@ -1,6 +1,7 @@
 import json
 import uuid
 import os
+import sys
 from pathlib import Path
 import datetime as dt
 from datetime import datetime, timedelta
@@ -223,14 +224,30 @@ def get_analytics(filepath="./data/analytics.json"):
 
 @app.before_request
 def limit_host_header():
-    host: str = request.host.split(':')[0]
-    if not host.endswith(ALLOWED_HOST):
-        headers = dict(request.headers)
-        log_text("----- NOT_OFFICIAL_DOMAIN -----")
-        log_text(f"{request.remote_addr} -> {request.url}")
-        log_text("")
-        log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
-        return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked this request. Please use `diamondgotcat.net` instead."), 403
+    host = request.host.split(':')[0]
+    headers = dict(request.headers)
+    if os.path.isfile("./data/blacklist.json"):
+        with open("./data/blacklist.json", 'r', encoding='utf-8') as file:
+            blacklist: list = json.load(file)
+        
+        x_forwarded_for = headers.get("X-Forwarded-For", "NOT_PROXY")
+        x_forwarded_for_arrow = (f"{x_forwarded_for} -> " if x_forwarded_for != "NOT_PROXY" else x_forwarded_for)
+        if (not host.endswith(ALLOWED_HOST)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
+            log_text("----- FOUND IN BLACKLIST: NOT_OFFICIAL_DOMAIN -----")
+            log_text(f"{x_forwarded_for_arrow}{request.remote_addr} -> (FOUND IN BLACKLIST) {request.url}")
+            log_text("")
+            log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
+            return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked this request. Please use `diamondgotcat.net` instead."), 403
+        
+        if request.remote_addr in blacklist:
+            log_text(f"----- FOUND IN BLACKLIST: {request.remote_addr} -----")
+            log_text(f"{x_forwarded_for_arrow}(FOUND IN BLACKLIST) {request.remote_addr} -> {request.url}")
+            log_text("")
+
+        if x_forwarded_for in blacklist:
+            log_text(f"----- FOUND IN BLACKLIST: {x_forwarded_for} -----")
+            log_text(f"(FOUND IN BLACKLIST) {x_forwarded_for_arrow}{request.remote_addr} -> {request.url}")
+            log_text("")
 
 @app.errorhandler(400)
 def four_o_o(e):
