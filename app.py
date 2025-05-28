@@ -14,6 +14,7 @@ from collections import Counter, defaultdict, deque
 import argparse
 import shutil
 import threading
+import traceback
 
 app = Flask(__name__)
 secret_key = str(uuid.uuid4())
@@ -367,11 +368,11 @@ def index_page():
     analytics = get_analytics()
     return render_template('index.html', accessNo=str(analytics["totalCount"]))
 
-@app.route('/error/<path:code>')
+@app.route('/error/<path:code>/')
 def index_page(code):
     return render_template('error.html', enumber=code, ename=f"Error Page (/error/{code}/)")
 
-@app.route('/api/v1')
+@app.route('/api/v1/')
 def api_index():
     headers = dict(request.headers)
     log_access(headers, request.url, request)
@@ -487,14 +488,20 @@ def analytics_page():
         )
 
 if __name__ == "__main__":
-    if os.path.isfile("./logs/latest.log"):
-        log_uuid = str(uuid.uuid4())
-        shutil.copy2("./logs/latest.log", f"./logs/archives/{log_uuid}.log")
-    log_reset()
-    
     try:
+        if os.path.isfile("./logs/latest.log"):
+            log_uuid = str(uuid.uuid4())
+            shutil.copy2("./logs/latest.log", f"./logs/archives/{log_uuid}.log")
+        log_reset()
+
         log_text("[START] Web Server has Started!")
         log_text(f"[SECRET KEY] Secret Key: {secret_key}")
         app.run("0.0.0.0", 80)
     except KeyboardInterrupt:
         pass
+    except Exception as e:
+        error_uuid = str(uuid.uuid4())
+        error_filepath = Path(f"./logs/archives/error_{error_uuid}.log")
+        tb_str = traceback.format_exc()
+        with error_filepath.open('w', encoding='utf-8') as f:
+            f.write(tb_str + '\n')
