@@ -27,8 +27,21 @@
     <svg width="40px" height="40px" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="#FF0000">
         <path d="M6.75827 17.2426L12.0009 12M17.2435 6.75736L12.0009 12M12.0009 12L6.75827 6.75736M12.0009 12L17.2435 17.2426" stroke="#FF0000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
     </svg>
-    <div class="bg-black dark:bg-white rounded-xl">
-        <a class="p-4 text-white dark:text-black" href="https://diamondgotcat.net/">Back to Top</a>
-    </div>
+    <a href="https://diamondgotcat.net/">
+        <div class="p-2 rounded-xl bg-black hover:bg-black/75 dark:bg-white dark:hover:bg-white/75">
+            <p class="block dark:hidden">
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg width="24px" height="24px" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="#FFFFFF">
+                    <path d="M6 15L12 9L18 15" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+            </p>
+            <p class="hidden dark:block">
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg width="24px" height="24px" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="#000000">
+                    <path d="M6 15L12 9L18 15" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+            </p>
+        </div>
+    </a>
 </div>
 {% endblock %}
