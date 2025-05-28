@@ -641,8 +641,8 @@ if __name__ == "__main__":
 
     host = "0.0.0.0" if public else "localhost"
     try:
-        log_text(f"[INFO] Started ({host}:{port})")
-        log_text(f"[INFO] Secret: ({secret_key})")
+        log_text(f"[INFO] Server Started ({host}:{port})")
+        log_text(f"[INFO] Secret Key ({secret_key})")
         app.run(host, port)
 
     except KeyboardInterrupt:
