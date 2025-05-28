@@ -10,7 +10,7 @@ from flask import Flask, request, abort, send_from_directory, render_template, j
 from markupsafe import escape
 from typing import Optional
 from countrys import Countrys
-from collections import Counter
+from collections import Counter, defaultdict, deque
 import argparse
 import shutil
 import threading
@@ -18,6 +18,8 @@ import threading
 app = Flask(__name__)
 secret_key = str(uuid.uuid4())
 log_initial_text = f"[1ST LINE] Initial Text"
+ip_request_log = defaultdict(lambda: deque())
+ip_block_info = {}
 
 def log_reset(filepath: str = './logs/latest.log'):
     path = Path(filepath)
@@ -231,13 +233,57 @@ def add_to_blacklist(ip):
 
 @app.before_request
 def limit_host_header():
-    host = request.host.split(':')[0]
+    now = datetime.now(dt.timezone.utc)
     headers = dict(request.headers)
+
+    ip = headers.get("X-Forwarded-For", request.remote_addr)
+
+    ip_queue = ip_request_log[ip]
+    while ip_queue and (now - ip_queue[0]).total_seconds() > 60:
+        ip_queue.popleft()
+    ip_queue.append(now)
+
+    count = len(ip_queue)
+    if count >= 101:
+        log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}(FOUND IN BLACKLIST) {request.remote_addr} -> {host}{request.full_path}")
+        return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {request.remote_addr}"), 403
+
+    if ip in ip_block_info:
+        if now < ip_block_info[ip]:
+            seconds_left = int((ip_block_info[ip] - now).total_seconds())
+            log_text(f"[BLOCKED ACTIVE] {ip} still blocked for {seconds_left}s")
+            return render_template('error.html', enumber="429", ename=f"You are blocked for {seconds_left}s"), 429
+        else:
+            del ip_block_info[ip]
+    
+    if count >= 100:
+        add_to_blacklist(ip)
+        log_text(f"[BLACKLIST] IP {ip} exceeded 100 req/min -> Blacklisted")
+        return render_template('error.html', enumber="429", ename="You are added to blacklist"), 429
+    elif count >= 80:
+        ip_block_info[ip] = now + timedelta(hours=1)
+        log_text(f"[BLOCKED] IP {ip} blocked for 1 hour (>=80 req/min)")
+        return render_template('error.html', enumber="429", ename="You are blocked for 3600s"), 429
+    elif count >= 60:
+        ip_block_info[ip] = now + timedelta(minutes=10)
+        log_text(f"[BLOCKED] IP {ip} blocked for 10 minutes (>=60 req/min)")
+        return render_template('error.html', enumber="429", ename="You are blocked for 600s"), 429
+    elif count >= 40:
+        ip_block_info[ip] = now + timedelta(minutes=5)
+        log_text(f"[BLOCKED] IP {ip} blocked for 5 minutes (>=40 req/min)")
+        return render_template('error.html', enumber="429", ename="You are blocked for 300s"), 429
+    elif count >= 20:
+        ip_block_info[ip] = now + timedelta(seconds=30)
+        log_text(f"[BLOCKED] IP {ip} blocked for 30 seconds (>=20 req/min)")
+        return render_template('error.html', enumber="429", ename="You are blocked for 30s"), 429
+
+    host = request.host.split(':')[0]
     if os.path.isfile("./data/blacklist.json"):
         with open("./data/blacklist.json", 'r', encoding='utf-8') as file:
             blacklist: list = json.load(file)
         with open("./data/domains.json", 'r', encoding='utf-8') as file:
             domains: list = json.load(file)
+
         current_time = str(datetime.now(dt.timezone.utc))
         x_forwarded_for = headers.get("X-Forwarded-For", "NOT_PROXY")
         x_forwarded_for_arrow = (f"{x_forwarded_for} -> " if x_forwarded_for != "NOT_PROXY" else "")
@@ -254,12 +300,9 @@ def limit_host_header():
             log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> (FOUND IN BLACKLIST) {host}{request.full_path}")
             log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
 
-            if x_forwarded_for == "NOT_PROXY":
-                add_to_blacklist(request.remote_addr)
-                log_text(f"[BLACKLIST] Added to Blacklist: {request.remote_addr}")
-            else:
-                add_to_blacklist(x_forwarded_for)
-                log_text(f"[BLACKLIST] Added to Blacklist: {x_forwarded_for}")
+            to_block = x_forwarded_for if x_forwarded_for != "NOT_PROXY" else request.remote_addr
+            add_to_blacklist(to_block)
+            log_text(f"[BLACKLIST] Added to Blacklist: {to_block}")
 
             return render_template('error.html', enumber="403", ename=f"ERROR ID: NOT_OFFICIAL_DOMAIN"), 403
         
