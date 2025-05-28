@@ -631,15 +631,19 @@ def analytics_page():
         )
 
 if __name__ == "__main__":
+    public = True
+    port = 80
+
     if os.path.isfile("./logs/latest.log"):
         log_uuid = str(uuid.uuid4())
         shutil.copy2("./logs/latest.log", f"./logs/archives/{log_uuid}.log")
     log_reset()
 
+    host = "0.0.0.0" if public else "localhost"
     try:
-        log_text("[START] Web Server has Started!")
-        log_text(f"[SECRET KEY] Secret Key: {secret_key}")
-        app.run("0.0.0.0", 80)
+        log_text(f"[INFO] Started ({host}:{port})")
+        log_text(f"[INFO] Secret: ({secret_key})")
+        app.run(host, port)
 
     except KeyboardInterrupt:
         pass
