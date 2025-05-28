@@ -228,7 +228,7 @@ def limit_host_header():
         log_text(request.url)
         log_text("")
         log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url)
-        return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked. Please use `diamondgotcat.net` instead."), 403
+        return render_template('error.html', enumber="NOT_OFFICIAL_DOMAIN", ename="This is Not Official Domain, so I blocked this request. Please use `diamondgotcat.net` instead."), 403
 
 @app.errorhandler(400)
 def four_o_o(e):
