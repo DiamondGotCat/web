@@ -302,9 +302,18 @@ def limit_host_header():
             f.close()
 
         current_time = str(datetime.now(dt.timezone.utc))
-        x_forwarded_for = headers.get("X-Forwarded-For", "NOT_PROXY")
-        x_forwarded_for_arrow = (f"{x_forwarded_for} -> " if x_forwarded_for != "NOT_PROXY" else "")
-        x_forwarded_for_arrow_blocked = (f"[{x_forwarded_for}] -> " if x_forwarded_for != "NOT_PROXY" else "")
+        x_forwarded_for = headers.get("X-Forwarded-For", None)
+        isProxy = False if x_forwarded_for == None else True
+
+        x_forwarded_for_arrow = "" if isProxy else f"{x_forwarded_for} -> "
+        x_forwarded_for_arrow_blocked = "" if isProxy else f"[{x_forwarded_for}] -> "
+
+        if (isProxy) and "PROXY" in blacklist:
+            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow} [{request.remote_addr}] -> {host}{request.full_path}")
+            return render_template('error.html', enumber="403", ename=f"Proxies are prohibited on this server."), 403
+        elif (not isProxy) and "NOT_PROXY" in blacklist:
+            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow} [{request.remote_addr}] -> {host}{request.full_path}")
+            return render_template('error.html', enumber="403", ename=f"This server requires an official proxy."), 403
 
         if request.remote_addr in blacklist:
             log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow} [{request.remote_addr}] -> {host}{request.full_path}")
@@ -316,7 +325,7 @@ def limit_host_header():
 
         elif (not any(host.endswith(allowed) for allowed in domains)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
             log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> [{host}{request.full_path}]")
-            return render_template('error.html', enumber="403", ename=f"ERROR ID: NOT_OFFICIAL_DOMAIN"), 403
+            return render_template('error.html', enumber="403", ename=f"This URL does not appear to be official."), 403
         
         else:
             log_text(f"[PASSED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> {host}{request.full_path}")
