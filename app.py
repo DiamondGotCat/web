@@ -309,14 +309,14 @@ def limit_host_header():
         x_forwarded_for_arrow_blocked = "" if isProxy else f"[{x_forwarded_for}] -> "
 
         if (isProxy) and "PROXY" in blacklist:
-            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow} [{request.remote_addr}] -> {host}{request.full_path}")
+            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}[{request.remote_addr}] -> {host}{request.full_path}")
             return render_template('error.html', enumber="403", ename=f"Proxies are prohibited on this server."), 403
         elif (not isProxy) and "NOT_PROXY" in blacklist:
-            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow} [{request.remote_addr}] -> {host}{request.full_path}")
+            log_text(f"[BLOCKED] {current_time} [{x_forwarded_for_arrow}]{request.remote_addr} -> {host}{request.full_path}")
             return render_template('error.html', enumber="403", ename=f"This server requires an official proxy."), 403
 
         if request.remote_addr in blacklist:
-            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow} [{request.remote_addr}] -> {host}{request.full_path}")
+            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}[{request.remote_addr}] -> {host}{request.full_path}")
             return render_template('error.html', enumber="403", ename=f"You are in naughty list: {request.remote_addr}"), 403
 
         elif x_forwarded_for in blacklist:
