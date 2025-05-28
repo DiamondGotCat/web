@@ -2,6 +2,7 @@ import json
 import uuid
 import os
 import sys
+import time
 from pathlib import Path
 import datetime as dt
 from datetime import datetime, timedelta
@@ -12,6 +13,7 @@ from countrys import Countrys
 from collections import Counter
 import argparse
 import shutil
+import threading
 
 app = Flask(__name__)
 secret_key = str(uuid.uuid4())
@@ -286,6 +288,10 @@ def five_o_three(e):
     log_error(headers, "503 Service Unavailable", e, request.url, request)
     return render_template('error.html', enumber="503", ename="Service Unavailable")
 
+def shutdown_later(delay=1):
+    time.sleep(delay)
+    os._exit(0)
+
 @app.route('/')
 def index_page():
     headers = dict(request.headers)
@@ -300,18 +306,32 @@ def index_page():
 @app.route('/api/v1/')
 def api_index():
     headers = dict(request.headers)
-    if "Cf-Ipcountry" in headers.keys():
-        update_analytics(country=headers["Cf-Ipcountry"])
-    else:
-        update_analytics()
     log_access(headers, request.url, request)
     analytics = get_analytics()
     access_number = analytics["totalCount"]
     pong_data = {
         "code": 0,
-        "content": f"Access #{access_number}"
+        "content": "Pong!"
     }
     return jsonify(pong_data)
+
+@app.route('/api/v1/stop/<path:key>')
+def api_stop(key):
+    if secret_key == key:
+        threading.Thread(target=shutdown_later).start()
+        headers = dict(request.headers)
+        log_access(headers, request.url, request)
+        pong_data = {
+            "code": 0,
+            "content": "Okay, Stopping Now!"
+        }
+        return jsonify(pong_data)
+    else:
+        pong_data = {
+            "code": 1,
+            "content": "Need Secret Key for This Action"
+        }
+        return jsonify(pong_data)
 
 @app.route('/icons/<path:filename>')
 def icon_return(filename):

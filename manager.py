@@ -10,9 +10,11 @@ import sys
 import os
 import json
 import traceback
+import requests
 from os.path import expanduser
 from rich import print
 from rich.console import Console
+from rich.prompt import Prompt
 
 VERSION_TYPE = "Pylo"
 VERSION_NUMBER = "8.0"
@@ -559,6 +561,20 @@ class Interpreter:
         self.pylo_def("@", "NOT_PROXY", "NOT_PROXY")
         self.pylo_def("@", "notOfficialDomain", "NOT_OFFICIAL_DOMAIN")
         self.pylo_def("@", "notProxy", "NOT_PROXY")
+
+        self.pylo_def("@", "print", self.color_print)
+        self.pylo_def("@", "show", self.pylo_print)
+        self.pylo_def("@", "ask", input)
+
+        def exit_now(code=0):
+            exit(code)
+        self.pylo_def("@", "exit", exit_now)
+
+        def stop_server():
+            secret_key = Prompt.ask("Secret key")
+            r = requests.get(f"http://localhost/api/v1/stop/{secret_key}")
+            self.color_print(f"[blue bold](Response)[/blue bold] {r.text}")
+        self.pylo_def("@", "stop", stop_server)
 
         def blacklist_add(content):
             if os.path.isfile("./data/blacklist.json"):
