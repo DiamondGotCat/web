@@ -16,7 +16,7 @@ from rich import print
 from rich.console import Console
 from rich.prompt import Prompt
 
-VERSION_TYPE = "Pylo"
+VERSION_TYPE = "SpecialPylo(for DGCWebServer)"
 VERSION_NUMBER = "8.0"
 VERSION = f"{VERSION_TYPE} {VERSION_NUMBER}"
 
