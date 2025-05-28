@@ -245,10 +245,46 @@ def add_to_blacklist(ip):
         json.dump(new_blacklist, f, ensure_ascii=False, indent=4)
         f.close()
 
+def build_route_str(request_obj, blocked_location=None):
+    headers = dict(request_obj.headers)
+    hostname = request.host.split(':')[0]
+    full_path = request_obj.full_path
+
+    remote_addr = request_obj.remote_addr
+    x_forwarded_for = headers.get("X-Forwarded-For", None)
+
+    isProxy = False if x_forwarded_for == None else True
+    if isProxy:
+        if blocked_location == None:
+            return f"{x_forwarded_for} -> {remote_addr} -> {hostname}{full_path}"
+        
+        elif blocked_location == "remote":
+            return f"[{x_forwarded_for}] -> {remote_addr} -> {hostname}{full_path}"
+        
+        elif blocked_location == "proxy":
+            return f"{x_forwarded_for} -> [{remote_addr}] -> {hostname}{full_path}"
+        
+        elif blocked_location == "hostname":
+            return f"{x_forwarded_for} -> {remote_addr} -> [{hostname}{full_path}]"
+        
+    else:
+        if blocked_location == None:
+            return f"{remote_addr} -> NO PROXY -> {hostname}{full_path}"
+        
+        elif blocked_location == "remote":
+            return f"[{remote_addr}] -> NO PROXY -> {hostname}{full_path}"
+        
+        elif blocked_location == "proxy":
+            return f"{remote_addr} -> [NO PROXY] -> {hostname}{full_path}"
+        
+        elif blocked_location == "hostname":
+            return f"{remote_addr} -> NO PROXY -> [{hostname}{full_path}]"
+
 @app.before_request
 def limit_host_header():
     now = datetime.now(dt.timezone.utc)
     headers = dict(request.headers)
+    host = request.host.split(':')[0]
 
     ip = headers.get("X-Forwarded-For", request.remote_addr)
 
@@ -259,39 +295,39 @@ def limit_host_header():
 
     count = len(ip_queue)
     if count >= 101:
-        log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}(FOUND IN BLACKLIST) {request.remote_addr} -> {host}{request.full_path}")
+        route_str = build_route_str(request, "remote")
+        log_text(f"[BLOCK] {current_time} {route_str}")
         return render_template('error.html', enumber="403", ename=f"You are in naughty list: {request.remote_addr}"), 403
 
     if ip in ip_block_info:
         if now < ip_block_info[ip]:
             seconds_left = int((ip_block_info[ip] - now).total_seconds())
-            log_text(f"[BLOCKED ACTIVE] {ip} still blocked for {seconds_left}s")
+            log_text(f"[BLOCK] {current_time} IP {ip} still blocked for {seconds_left}s")
             return render_template('error.html', enumber="429", ename=f"You are blocked for {seconds_left}s"), 429
         else:
             del ip_block_info[ip]
     
     if count >= 80:
         add_to_blacklist(ip)
-        log_text(f"[BLOCKED] IP {ip} exceeded 100 req/min -> Blacklisted")
+        log_text(f"[BLOCK] {current_time} IP {ip} exceeded 100 req/min -> Blacklisted")
         return render_template('error.html', enumber="429", ename="You are added to naughty list"), 429
     elif count >= 70:
         ip_block_info[ip] = now + timedelta(hours=1)
-        log_text(f"[BLOCKED] IP {ip} blocked for 1 hour (>=80 req/min)")
+        log_text(f"[BLOCK] {current_time} IP {ip} blocked for 1 hour (>=80 req/min)")
         return render_template('error.html', enumber="429", ename="You are blocked for 3600s"), 429
     elif count >= 60:
         ip_block_info[ip] = now + timedelta(minutes=10)
-        log_text(f"[BLOCKED] IP {ip} blocked for 10 minutes (>=60 req/min)")
+        log_text(f"[BLOCK] {current_time} IP {ip} blocked for 10 minutes (>=60 req/min)")
         return render_template('error.html', enumber="429", ename="You are blocked for 600s"), 429
     elif count >= 50:
         ip_block_info[ip] = now + timedelta(minutes=5)
-        log_text(f"[BLOCKED] IP {ip} blocked for 5 minutes (>=40 req/min)")
+        log_text(f"[BLOCK] {current_time} IP {ip} blocked for 5 minutes (>=40 req/min)")
         return render_template('error.html', enumber="429", ename="You are blocked for 300s"), 429
     elif count >= 40:
         ip_block_info[ip] = now + timedelta(seconds=30)
-        log_text(f"[BLOCKED] IP {ip} blocked for 30 seconds (>=20 req/min)")
+        log_text(f"[BLOCK] {current_time} IP {ip} blocked for 30 seconds (>=20 req/min)")
         return render_template('error.html', enumber="429", ename="You are blocked for 30s"), 429
 
-    host = request.host.split(':')[0]
     if os.path.isfile("./data/blacklist.json"):
         with open("./data/blacklist.json", 'r', encoding='utf-8') as f:
             blacklist: list = json.load(f)
@@ -309,26 +345,32 @@ def limit_host_header():
         x_forwarded_for_arrow_blocked = f"[{x_forwarded_for}] -> " if isProxy else ""
 
         if (isProxy) and "PROXY" in blacklist:
-            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}[{request.remote_addr}] -> {host}{request.full_path}")
+            route_str = build_route_str(request, "proxy")
+            log_text(f"[BLOCK] {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"Proxies are prohibited on this server."), 403
         elif (not isProxy) and "NOT_PROXY" in blacklist:
-            log_text(f"[BLOCKED] {current_time} {request.remote_addr} -> [NO PROXY] -> {host}{request.full_path}")
+            route_str = build_route_str(request, "proxy")
+            log_text(f"[BLOCK] {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"This server requires an official proxy."), 403
 
         if request.remote_addr in blacklist:
-            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}[{request.remote_addr}] -> {host}{request.full_path}")
+            route_str = build_route_str(request, "remote")
+            log_text(f"[BLOCK] {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"You are in naughty list: {request.remote_addr}"), 403
 
         elif x_forwarded_for in blacklist:
-            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow_blocked}{request.remote_addr} -> {host}{request.full_path}")
+            route_str = build_route_str(request, "proxy")
+            log_text(f"[BLOCK] {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"You are in naughty list: {x_forwarded_for}"), 403
 
         elif (not any(host.endswith(allowed) for allowed in domains)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
-            log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> [{host}{request.full_path}]")
+            route_str = build_route_str(request, "hostname")
+            log_text(f"[BLOCK] {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"This URL does not appear to be official."), 403
         
         else:
-            log_text(f"[PASSED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> {host}{request.full_path}")
+            route_str = build_route_str(request)
+            log_text(f"[PASS] {current_time} {route_str}")
 
 @app.errorhandler(400)
 def four_o_o(e):
