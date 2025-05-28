@@ -10,8 +10,10 @@ from markupsafe import escape
 from typing import Optional
 from countrys import Countrys
 from collections import Counter
-import rich
+from rich import print as rprint
+from rich.console import Console
 
+console = Console(force_terminal=True)
 app = Flask(__name__)
 ALLOWED_HOST = 'diamondgotcat.net'
 log_initial_text = f"STARTED - Working on {ALLOWED_HOST}"
@@ -35,7 +37,7 @@ def log_text(content, filepath: str = './logs/latest.log'):
         f.writelines(lines)
     
     if content != "":
-        rich.print(content)
+        console.print(content)
 
 def log_access(headers: dict, url, request_obj, date: Optional[datetime] = None, filepath: str = './logs/access.json'):
     if date is None:
