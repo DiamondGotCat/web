@@ -243,13 +243,16 @@ def limit_host_header():
         x_forwarded_for_arrow = (f"{x_forwarded_for} -> " if x_forwarded_for != "NOT_PROXY" else "")
 
         if (not any(host.endswith(allowed) for allowed in domains)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
-            if x_forwarded_for == "NOT_PROXY":
-                add_to_blacklist(request.remote_addr)
-            else:
-                add_to_blacklist(x_forwarded_for)
-
             log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> (FOUND IN BLACKLIST) {host}{request.full_path}")
             log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
+
+            if x_forwarded_for == "NOT_PROXY":
+                add_to_blacklist(request.remote_addr)
+                log_text(f"[BLACKLIST] Added to Blacklist: {request.remote_addr}")
+            else:
+                add_to_blacklist(x_forwarded_for)
+                log_text(f"[BLACKLIST] Added to Blacklist: {x_forwarded_for}")
+
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: NOT_OFFICIAL_DOMAIN"), 403
         
         elif request.remote_addr in blacklist:
