@@ -305,8 +305,8 @@ def limit_host_header():
         x_forwarded_for = headers.get("X-Forwarded-For", None)
         isProxy = False if x_forwarded_for == None else True
 
-        x_forwarded_for_arrow = "" if isProxy else f"{x_forwarded_for} -> "
-        x_forwarded_for_arrow_blocked = "" if isProxy else f"[{x_forwarded_for}] -> "
+        x_forwarded_for_arrow = f"{x_forwarded_for} -> " if isProxy else ""
+        x_forwarded_for_arrow_blocked = f"[{x_forwarded_for}] -> " if isProxy else ""
 
         if (isProxy) and "PROXY" in blacklist:
             log_text(f"[BLOCKED] {current_time} {x_forwarded_for_arrow}[{request.remote_addr}] -> {host}{request.full_path}")
