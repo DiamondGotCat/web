@@ -230,24 +230,20 @@ def limit_host_header():
         if (not host.endswith(ALLOWED_HOST)) and ("NOT_OFFICIAL_DOMAIN" in blacklist):
             log_text("----- FOUND IN BLACKLIST: NOT_OFFICIAL_DOMAIN -----")
             log_text(f"{x_forwarded_for_arrow}{request.remote_addr} -> (FOUND IN BLACKLIST) {request.url}")
-            log_text("")
             log_error(headers, "NOT_OFFICIAL_DOMAIN", "Special Error: NOT_OFFICIAL_DOMAIN", request.url, request)
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: NOT_OFFICIAL_DOMAIN"), 403
         
         elif request.remote_addr in blacklist:
             log_text(f"----- FOUND IN BLACKLIST: {request.remote_addr} -----")
             log_text(f"{x_forwarded_for_arrow}(FOUND IN BLACKLIST) {request.remote_addr} -> {request.url}")
-            log_text("")
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {request.remote_addr}"), 403
 
         elif x_forwarded_for in blacklist:
             log_text(f"----- FOUND IN BLACKLIST: {x_forwarded_for} -----")
             log_text(f"(FOUND IN BLACKLIST) {x_forwarded_for_arrow}{request.remote_addr} -> {request.url}")
-            log_text("")
             return render_template('error.html', enumber="403", ename=f"Found in Blacklist: {x_forwarded_for}"), 403
         else:
             log_text(f"(NEW ACCESS) {x_forwarded_for_arrow}{request.remote_addr} -> {request.url}")
-            log_text("")
 
 @app.errorhandler(400)
 def four_o_o(e):
