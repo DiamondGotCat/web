@@ -329,6 +329,18 @@ try:
             else:
                 log_text(f"[PASSED] {current_time} {x_forwarded_for_arrow}{request.remote_addr} -> {host}{request.full_path}")
 
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        tb_str = traceback.format_exc()
+        error_uuid = str(uuid.uuid4())
+        error_filepath = f"./logs/archives/error_{error_uuid}.log"
+        error_filepath_obj = Path(error_filepath)
+        tb_str = traceback.format_exc()
+        with error_filepath_obj.open('w', encoding='utf-8') as f:
+            f.write(tb_str + '\n')
+            f.close()
+        print(f"[ERROR] LOG: {error_filepath}")
+
     @app.errorhandler(400)
     def four_o_o(e):
         headers = dict(request.headers)
