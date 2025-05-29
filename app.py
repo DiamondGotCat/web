@@ -224,11 +224,11 @@ def four_o_four(e):
     route_str = build_route_str(request, "hostname")
     log_text(f"[ERROR] 404 | {current_time} {route_str}")
 
-    if len(ip_queue) >= 7:
+    if len(ip_queue) >= 5:
         add_to_blacklist(ip)
         return render_template('error.html', enumber="403", ename="You are now in the naughty list"), 403
 
-    elif len(ip_queue) >= 6:
+    elif len(ip_queue) >= 4:
         return render_template('final_warning.html'), 404
 
     return render_template('error.html', enumber="404", ename="Not Found")
