@@ -277,10 +277,14 @@ def api_index():
     log_text(f"[INFO] PASS | {current_time} {route_str}")
     return jsonify({"code": 0, "content": "Pong!"})
 
+def shutdown_later(delay=1):
+    time.sleep(delay)
+    os._exit(0)
+
 @app.route('/api/v1/stop/<path:key>')
 def api_stop(key):
     if secret_key == key:
-        threading.Thread(target=lambda: (time.sleep(1), os._exit(0))).start()
+        threading.Thread(target=shutdown_later).start()
         return jsonify({"code": 0, "content": "Okay, Stopping Now!"})
     else:
         return jsonify({"code": 1, "content": "Need Secret Key for This Action"})
@@ -298,6 +302,30 @@ def icon_return(filename):
     route_str = build_route_str(request)
     log_text(f"[INFO] PASS | {current_time} {route_str}")
     return send_from_directory('static/icons', filename)
+
+@app.route('/zeta/')
+def zeta_index_page():
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
+
+    return render_template('zeta-index.html')
+
+@app.route('/burners/')
+def burners_page():
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
+
+    return render_template('burners.html')
+
+@app.route('/burners/img/<path:filename>')
+def burners_img(filename):
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
+
+    return send_from_directory('static/burners', filename)
 
 if __name__ == "__main__":
     public = True
