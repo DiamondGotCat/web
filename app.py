@@ -20,6 +20,7 @@ app = Flask(__name__)
 secret_key = str(uuid.uuid4())
 log_initial_text = f"[INFO] Logging Started"
 ip_request_log = defaultdict(lambda: deque())
+ip_404_log = defaultdict(lambda: deque())
 ip_block_info = {}
 
 def log_reset(filepath: str = './logs/latest.log'):
@@ -403,12 +404,29 @@ def four_o_two(e):
 
 @app.errorhandler(404)
 def four_o_four(e):
+    now = datetime.now(dt.timezone.utc)
+    ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+    ip_queue = ip_404_log[ip]
+
+    while ip_queue and (now - ip_queue[0]).total_seconds() > 60:
+        ip_queue.popleft()
+    ip_queue.append(now)
+
     headers = dict(request.headers)
     log_error(headers, "404 Not Found", e, request.url, request)
 
-    current_time = str(datetime.now(dt.timezone.utc))
+    current_time = str(now)
     route_str = build_route_str(request, "hostname")
-    log_text(f"[ERROR] {current_time} {route_str}")
+    log_text(f"[ERROR] {current_time} {route_str} (404)")
+
+    if len(ip_queue) >= 7:
+        add_to_blacklist(ip)
+        log_text(f"[BLOCK] {current_time} IP {ip} blacklisted due to excessive 404s (>=8 in 60s)")
+        return render_template('error.html', enumber="403", ename="You are now in the naughty list"), 403
+
+    elif len(ip_queue) >= 6:
+        log_text(f"[WARN] {current_time} IP {ip} triggered final warning due to excessive 404s.")
+        return render_template('final_warning.html'), 404
 
     return render_template('error.html', enumber="404", ename="Not Found")
 
