@@ -62,7 +62,7 @@ def add_to_blacklist(ip):
 def build_route_str(request_obj, issue_location=None):
     headers = dict(request_obj.headers)
     hostname = request.host.split(':')[0]
-    full_path = request_obj.full_path
+    path = request_obj.path
 
     remote_addr = request_obj.remote_addr
     x_forwarded_for = headers.get("X-Forwarded-For", None)
@@ -70,29 +70,29 @@ def build_route_str(request_obj, issue_location=None):
     isProxy = False if x_forwarded_for == None else True
     if isProxy:
         if issue_location == None:
-            return f"{x_forwarded_for} -> {remote_addr} -> {hostname}{full_path}"
+            return f"{x_forwarded_for} -> {remote_addr} -> {hostname}{path}"
         
         elif issue_location == "remote":
-            return f"[{x_forwarded_for}] -> {remote_addr} -> {hostname}{full_path}"
+            return f"[{x_forwarded_for}] -> {remote_addr} -> {hostname}{path}"
         
         elif issue_location == "proxy":
-            return f"{x_forwarded_for} -> [{remote_addr}] -> {hostname}{full_path}"
+            return f"{x_forwarded_for} -> [{remote_addr}] -> {hostname}{path}"
         
         elif issue_location == "hostname":
-            return f"{x_forwarded_for} -> {remote_addr} -> [{hostname}{full_path}]"
+            return f"{x_forwarded_for} -> {remote_addr} -> [{hostname}{path}]"
         
     else:
         if issue_location == None:
-            return f"{remote_addr} -> NO PROXY -> {hostname}{full_path}"
+            return f"{remote_addr} -> NO PROXY -> {hostname}{path}"
         
         elif issue_location == "remote":
-            return f"[{remote_addr}] -> NO PROXY -> {hostname}{full_path}"
+            return f"[{remote_addr}] -> NO PROXY -> {hostname}{path}"
         
         elif issue_location == "proxy":
-            return f"{remote_addr} -> [NO PROXY] -> {hostname}{full_path}"
+            return f"{remote_addr} -> [NO PROXY] -> {hostname}{path}"
         
         elif issue_location == "hostname":
-            return f"{remote_addr} -> NO PROXY -> [{hostname}{full_path}]"
+            return f"{remote_addr} -> NO PROXY -> [{hostname}{path}]"
 
 @app.before_request
 def rate_limit():
