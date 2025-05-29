@@ -266,7 +266,7 @@ def index_page():
     headers = dict(request.headers)
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
-    log_text(f"[INFO] PASS {current_time} {route_str}")
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
 
     return render_template('index.html')
 
@@ -289,7 +289,7 @@ def api_index():
 
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
-    log_text(f"[INFO] PASS {current_time} {route_str}")
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
 
     return jsonify(pong_data)
 
@@ -306,7 +306,7 @@ def api_stop(key):
 
         current_time = str(datetime.now(dt.timezone.utc))
         route_str = build_route_str(request)
-        log_text(f"[INFO] PASS {current_time} {route_str}")
+        log_text(f"[INFO] PASS | {current_time} {route_str}")
 
         return jsonify(pong_data)
     else:
@@ -325,7 +325,7 @@ def api_stop(key):
 def icon_return(filename):
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
-    log_text(f"[INFO] PASS {current_time} {route_str}")
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
 
     return send_from_directory('static/icons', filename)
 
@@ -333,7 +333,7 @@ def icon_return(filename):
 def favicon_return():
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
-    log_text(f"[INFO] PASS {current_time} {route_str}")
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
 
     return send_from_directory('static/favicon', "favicon.ico")
 
@@ -342,7 +342,7 @@ def zeta_index_page():
     headers = dict(request.headers)
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
-    log_text(f"[INFO] PASS {current_time} {route_str}")
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
 
     return render_template('zeta-index.html')
 
@@ -351,7 +351,7 @@ def burners_page():
     headers = dict(request.headers)
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
-    log_text(f"[INFO] PASS {current_time} {route_str}")
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
 
     return render_template('burners.html')
 
@@ -359,7 +359,7 @@ def burners_page():
 def burners_img(filename):
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
-    log_text(f"[INFO] PASS {current_time} {route_str}")
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
 
     return send_from_directory('static/burners', filename)
 
