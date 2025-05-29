@@ -190,7 +190,7 @@ def rate_limit():
 def four_o_o(e):
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request, "hostname")
-    log_text(f"[ERROR] 400 | {current_time} {route_str}")
+    log_text(f"[INFO] E400 | {current_time} {route_str}")
 
     return render_template('error.html', enumber="400", ename="Bad Request")
 
@@ -198,7 +198,7 @@ def four_o_o(e):
 def four_o_one(e):
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request, "hostname")
-    log_text(f"[ERROR] 401 | {current_time} {route_str}")
+    log_text(f"[INFO] E401 | {current_time} {route_str}")
 
     return render_template('error.html', enumber="401", ename="Unauthorized")
 
@@ -206,7 +206,7 @@ def four_o_one(e):
 def four_o_two(e):
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request, "hostname")
-    log_text(f"[ERROR] 403 | {current_time} {route_str}")
+    log_text(f"[INFO] E403 | {current_time} {route_str}")
 
     return render_template('error.html', enumber="403", ename="Forbidden")
 
@@ -222,7 +222,7 @@ def four_o_four(e):
     
     current_time = str(now)
     route_str = build_route_str(request, "hostname")
-    log_text(f"[ERROR] 404 | {current_time} {route_str}")
+    log_text(f"[INFO] E404 | {current_time} {route_str}")
 
     if len(ip_queue) >= 5:
         add_to_blacklist(ip)
@@ -237,7 +237,7 @@ def four_o_four(e):
 def four_one_four(e):
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request, "hostname")
-    log_text(f"[ERROR] 414 | {current_time} {route_str}")
+    log_text(f"[INFO] E414 | {current_time} {route_str}")
 
     return render_template('error.html', enumber="414", ename="URI Too Long")
 
@@ -245,7 +245,7 @@ def four_one_four(e):
 def five_o_o(e):
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request, "hostname")
-    log_text(f"[ERROR] 500 | {current_time} {route_str}")
+    log_text(f"[INFO] E500 | {current_time} {route_str}")
 
     return render_template('error.html', enumber="500", ename="Internal Server Error")
 
@@ -253,7 +253,7 @@ def five_o_o(e):
 def five_o_three(e):
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request, "hostname")
-    log_text(f"[ERROR] 503 | {current_time} {route_str}")
+    log_text(f"[INFO] E503 | {current_time} {route_str}")
 
     return render_template('error.html', enumber="503", ename="Service Unavailable")
 
