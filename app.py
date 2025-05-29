@@ -1,20 +1,13 @@
 import json
 import uuid
 import os
-import sys
 import time
 from pathlib import Path
 import datetime as dt
 from datetime import datetime, timedelta
-from flask import Flask, request, abort, send_from_directory, render_template, jsonify
-from markupsafe import escape
-from typing import Optional
-from countries import Countrys
-from collections import Counter, defaultdict, deque
-import argparse
-import shutil
+from flask import Flask, request, send_from_directory, render_template, jsonify
+from collections import defaultdict, deque
 import threading
-import traceback
 
 app = Flask(__name__)
 secret_key = str(uuid.uuid4())
