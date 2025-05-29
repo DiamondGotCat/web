@@ -102,7 +102,7 @@ def rate_limit():
     ip_queue.append(now)
 
     count = len(ip_queue)
-    if count >= 101:
+    if count >= 45:
         route_str = build_route_str(request, "remote")
         log_text(f"[BLOCK] {current_time} {route_str}")
         return render_template('error.html', enumber="403", ename=f"You are in naughty list: {request.remote_addr}"), 403
@@ -110,30 +110,39 @@ def rate_limit():
     if user_ip in ip_block_info:
         if now < ip_block_info[user_ip]:
             seconds_left = int((ip_block_info[user_ip] - now).total_seconds())
-            log_text(f"[BLOCK] {current_time} IP {user_ip} blocked for {seconds_left}s")
+            route_str = build_route_str(request, "remote")
+            log_text(f"[BLOCK] {current_time} {route_str}")
             return render_template('error.html', enumber="429", ename=f"You are blocked for {seconds_left}s"), 429
         else:
             del ip_block_info[user_ip]
     
-    if count >= 100:
-        add_to_blacklist(user_ip)
-        log_text(f"[BLOCK] {current_time} IP {user_ip} has Blacklisted")
-        return render_template('error.html', enumber="429", ename="You are added to naughty list"), 429
-    elif count >= 80:
-        ip_block_info[user_ip] = now + timedelta(hours=1)
-        log_text(f"[BLOCK] {current_time} IP {user_ip} blocked for 3600s")
-        return render_template('error.html', enumber="429", ename="You are blocked for 3600s"), 429
-    elif count >= 60:
-        ip_block_info[user_ip] = now + timedelta(minutes=30)
-        log_text(f"[BLOCK] {current_time} IP {user_ip} blocked for 1800s")
-        return render_template('error.html', enumber="429", ename="You are blocked for 1800s"), 429
+    if count >= 44:
+        route_str = build_route_str(request, "remote")
+        log_text(f"[BLOCK] {current_time} {route_str}")
+        return render_template('final_warning.html'), 429
     elif count >= 40:
+        route_str = build_route_str(request, "remote")
+        log_text(f"[BLOCK] {current_time} {route_str}")
+        return render_template('error.html', enumber="429", ename="You are blocked for 3600s"), 429
+    elif count >= 35:
+        ip_block_info[user_ip] = now + timedelta(hours=1)
+        route_str = build_route_str(request, "remote")
+        log_text(f"[BLOCK] {current_time} {route_str}")
+        return render_template('error.html', enumber="429", ename="You are blocked for 3600s"), 429
+    elif count >= 30:
+        ip_block_info[user_ip] = now + timedelta(minutes=30)
+        route_str = build_route_str(request, "remote")
+        log_text(f"[BLOCK] {current_time} {route_str}")
+        return render_template('error.html', enumber="429", ename="You are blocked for 1800s"), 429
+    elif count >= 25:
         ip_block_info[user_ip] = now + timedelta(minutes=15)
-        log_text(f"[BLOCK] {current_time} IP {user_ip} blocked for 900s")
+        route_str = build_route_str(request, "remote")
+        log_text(f"[BLOCK] {current_time} {route_str}")
         return render_template('error.html', enumber="429", ename="You are blocked for 900s"), 429
     elif count >= 20:
         ip_block_info[user_ip] = now + timedelta(minutes=1)
-        log_text(f"[BLOCK] {current_time} IP {user_ip} blocked for 60s")
+        route_str = build_route_str(request, "remote")
+        log_text(f"[BLOCK] {current_time} {route_str}")
         return render_template('error.html', enumber="429", ename="You are blocked for 60s"), 429
 
     if os.path.isfile("./data/blacklist.json"):
