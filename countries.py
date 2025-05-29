@@ -1,4 +1,4 @@
-Countrys = {
+Countries = {
     # Normal
     'AF': 'Afghanistan',
     'AX': 'Åland Islands',
