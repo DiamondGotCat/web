@@ -312,33 +312,6 @@ def api_stop(key):
 
         return jsonify(pong_data)
 
-@app.route('/api/v1/reload/<path:key>')
-def api_stop(key):
-    if secret_key == key:
-        headers = dict(request.headers)
-        
-        pong_data = {
-            "code": 0,
-            "content": "Reload Settings..."
-        }
-
-        current_time = str(datetime.now(dt.timezone.utc))
-        route_str = build_route_str(request)
-        log_text(f"[OK] {current_time} {route_str}")
-
-        return jsonify(pong_data)
-    else:
-        pong_data = {
-            "code": 1,
-            "content": "Need Secret Key for This Action"
-        }
-
-        current_time = str(datetime.now(dt.timezone.utc))
-        route_str = build_route_str(request, "remote")
-        log_text(f"[BLOCK] {current_time} {route_str}")
-
-        return jsonify(pong_data)
-
 @app.route('/icons/<path:filename>')
 def icon_return(filename):
     current_time = str(datetime.now(dt.timezone.utc))
