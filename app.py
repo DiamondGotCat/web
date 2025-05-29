@@ -6,185 +6,184 @@ from pathlib import Path
 import datetime as dt
 from datetime import datetime, timedelta
 from flask import Flask, request, send_from_directory, render_template, jsonify
-from collections import defaultdict, deque
 import threading
 
 app = Flask(__name__)
 secret_key = str(uuid.uuid4())
 log_initial_text = f"[INFO] Logging Started"
-ip_request_log = defaultdict(lambda: deque())
-ip_404_log = defaultdict(lambda: deque())
-ip_block_info = {}
+
+BLACKLIST_PATH = "./data/blacklist.json"
+COUNT_DIR = "./data/counts"
 
 def log_reset(filepath: str = './logs/latest.log'):
     path = Path(filepath)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open('w', encoding='utf-8') as f:
         f.write(log_initial_text + '\n')
-        f.close()
 
 def log_text(content, filepath: str = './logs/latest.log'):
     path = Path(filepath)
     path.parent.mkdir(parents=True, exist_ok=True)
-
-    if isinstance(content, list):
-        lines = [str(line) + '\n' for line in content]
-    else:
-        lines = [str(content) + '\n']
-
+    lines = [str(line) + '\n' for line in content] if isinstance(content, list) else [str(content) + '\n']
     with path.open('a', encoding='utf-8') as f:
         f.writelines(lines)
-        f.close()
-    
     if content != "":
         print(content)
 
-def add_to_blacklist(ip):
-    if os.path.isfile("./data/blacklist.json"):
-        with open("./data/blacklist.json", 'r', encoding='utf-8') as f:
-            blacklist: list = json.load(f)
-            f.close()
-    else:
-        blacklist = []
-    new_blacklist = blacklist
-    new_blacklist.append(ip)
-    with open('./data/blacklist.json', 'w', encoding='utf-8') as f:
-        json.dump(new_blacklist, f, ensure_ascii=False, indent=4)
-        f.close()
+def load_blacklist():
+    if os.path.isfile(BLACKLIST_PATH):
+        with open(BLACKLIST_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return []
+
+def save_blacklist(blacklist):
+    with open(BLACKLIST_PATH, 'w', encoding='utf-8') as f:
+        json.dump(blacklist, f, ensure_ascii=False, indent=4)
+
+def is_blacklisted(ip, now=None):
+    now = now or datetime.now(dt.timezone.utc)
+    updated_blacklist = []
+    still_blacklisted = False
+
+    for entry in load_blacklist():
+        if isinstance(entry, str):
+            updated_blacklist.append({"ip": entry, "expire": None})
+            if entry == ip:
+                still_blacklisted = True
+        elif entry["ip"] == ip:
+            expire_time = entry.get("expire")
+            if not expire_time:
+                still_blacklisted = True
+                updated_blacklist.append(entry)
+            else:
+                expire_dt = datetime.fromisoformat(expire_time)
+                if now < expire_dt:
+                    still_blacklisted = True
+                    updated_blacklist.append(entry)
+        else:
+            updated_blacklist.append(entry)
+
+    save_blacklist(updated_blacklist)
+    return still_blacklisted
+
+def add_to_blacklist(ip, duration: timedelta = None):
+    now = datetime.now(dt.timezone.utc)
+    expire = None if duration is None else (now + duration).isoformat()
+    new_entry = {"ip": ip, "expire": expire}
+    blacklist = load_blacklist()
+    for entry in blacklist:
+        if (isinstance(entry, str) and entry == ip) or (isinstance(entry, dict) and entry["ip"] == ip):
+            return
+    blacklist.append(new_entry)
+    save_blacklist(blacklist)
 
 def build_route_str(request_obj, issue_location=None):
     headers = dict(request_obj.headers)
     hostname = request.host.split(':')[0]
     path = request_obj.path
-
     remote_addr = request_obj.remote_addr
     x_forwarded_for = headers.get("X-Forwarded-For", None)
+    isProxy = x_forwarded_for is not None
 
-    isProxy = False if x_forwarded_for == None else True
     if isProxy:
-        if issue_location == None:
-            return f"{x_forwarded_for} -> {remote_addr} -> {hostname}{path}"
-        
-        elif issue_location == "remote":
+        if issue_location == "remote":
             return f"[{x_forwarded_for}] -> {remote_addr} -> {hostname}{path}"
-        
         elif issue_location == "proxy":
             return f"{x_forwarded_for} -> [{remote_addr}] -> {hostname}{path}"
-        
         elif issue_location == "hostname":
             return f"{x_forwarded_for} -> {remote_addr} -> [{hostname}{path}]"
-        
+        return f"{x_forwarded_for} -> {remote_addr} -> {hostname}{path}"
     else:
-        if issue_location == None:
-            return f"{remote_addr} -> NO PROXY -> {hostname}{path}"
-        
-        elif issue_location == "remote":
+        if issue_location == "remote":
             return f"[{remote_addr}] -> NO PROXY -> {hostname}{path}"
-        
         elif issue_location == "proxy":
             return f"{remote_addr} -> [NO PROXY] -> {hostname}{path}"
-        
         elif issue_location == "hostname":
             return f"{remote_addr} -> NO PROXY -> [{hostname}{path}]"
+        return f"{remote_addr} -> NO PROXY -> {hostname}{path}"
 
 @app.before_request
 def rate_limit():
     now = datetime.now(dt.timezone.utc)
     headers = dict(request.headers)
     host = request.host.split(':')[0]
-
     user_ip = headers.get("X-Forwarded-For", request.remote_addr)
-    current_time = str(datetime.now(dt.timezone.utc))
+    current_time = now.isoformat()
 
-    ip_queue = ip_request_log[user_ip]
-    while ip_queue and (now - ip_queue[0]).total_seconds() > 60:
-        ip_queue.popleft()
-    ip_queue.append(now)
+    if is_blacklisted(user_ip, now):
+        route_str = build_route_str(request, "remote")
+        log_text(f"[INFO] DENY | {current_time} {route_str}")
+        return render_template('error.html', enumber="403", ename=f"You are in naughty list: {user_ip}"), 403
 
-    count = len(ip_queue)
+    Path(COUNT_DIR).mkdir(parents=True, exist_ok=True)
+    req_file = os.path.join(COUNT_DIR, f"{user_ip}.json")
+    if os.path.exists(req_file):
+        with open(req_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    else:
+        data = {"timestamps": []}
+
+    data["timestamps"] = [t for t in data["timestamps"]
+                          if (now - datetime.fromisoformat(t)).total_seconds() < 60]
+    data["timestamps"].append(now.isoformat())
+    with open(req_file, 'w', encoding='utf-8') as f:
+        json.dump(data, f)
+
+    count = len(data["timestamps"])
+
     if count >= 45:
-        route_str = build_route_str(request, "remote")
-        log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="403", ename=f"You are in naughty list: {request.remote_addr}"), 403
-
-    if user_ip in ip_block_info:
-        if now < ip_block_info[user_ip]:
-            seconds_left = int((ip_block_info[user_ip] - now).total_seconds())
-            route_str = build_route_str(request, "remote")
-            log_text(f"[INFO] DENY | {current_time} {route_str}")
-            return render_template('error.html', enumber="429", ename=f"You are blocked for {seconds_left}s"), 429
-        else:
-            del ip_block_info[user_ip]
-    
-    if count >= 44:
-        route_str = build_route_str(request, "remote")
-        log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('final_warning.html'), 429
+        add_to_blacklist(user_ip)
+        return render_template('error.html', enumber="403", ename="You are permanently blocked"), 403
     elif count >= 40:
-        route_str = build_route_str(request, "remote")
-        log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="429", ename="You are blocked for 3600s"), 429
+        add_to_blacklist(user_ip, timedelta(hours=1))
+        return render_template('error.html', enumber="429", ename="Blocked for 1 hour"), 429
     elif count >= 35:
-        ip_block_info[user_ip] = now + timedelta(hours=1)
-        route_str = build_route_str(request, "remote")
-        log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="429", ename="You are blocked for 3600s"), 429
+        add_to_blacklist(user_ip, timedelta(minutes=30))
+        return render_template('error.html', enumber="429", ename="Blocked for 30 minutes"), 429
     elif count >= 30:
-        ip_block_info[user_ip] = now + timedelta(minutes=30)
-        route_str = build_route_str(request, "remote")
-        log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="429", ename="You are blocked for 1800s"), 429
+        add_to_blacklist(user_ip, timedelta(minutes=15))
+        return render_template('error.html', enumber="429", ename="Blocked for 15 minutes"), 429
     elif count >= 25:
-        ip_block_info[user_ip] = now + timedelta(minutes=15)
+        add_to_blacklist(user_ip, timedelta(minutes=1))
+        return render_template('error.html', enumber="429", ename="Blocked for 1 minute"), 429
+
+    blacklist = load_blacklist()
+    with open("./data/domains.json", 'r', encoding='utf-8') as f:
+        domains = json.load(f)
+
+    x_forwarded_for = headers.get("X-Forwarded-For", None)
+    isProxy = x_forwarded_for is not None
+    isOfficialDomain = any(host.endswith(allowed) for allowed in domains)
+
+    if isProxy and is_blacklisted("PROXY", now):
+        route_str = build_route_str(request, "proxy")
+        log_text(f"[INFO] DENY | {current_time} {route_str}")
+        return render_template('error.html', enumber="403", ename="Proxies are prohibited on this server"), 403
+
+    elif not isProxy and is_blacklisted("NOT_PROXY", now):
+        route_str = build_route_str(request, "proxy")
+        log_text(f"[INFO] DENY | {current_time} {route_str}")
+        return render_template('error.html', enumber="403", ename="This server requires an official proxy"), 403
+
+    elif isOfficialDomain and is_blacklisted("OFFICIAL_DOMAIN", now):
+        route_str = build_route_str(request, "hostname")
+        log_text(f"[INFO] DENY | {current_time} {route_str}")
+        return render_template('error.html', enumber="403", ename="Official domains are prohibited"), 403
+
+    elif not isOfficialDomain and is_blacklisted("NOT_OFFICIAL_DOMAIN", now):
+        route_str = build_route_str(request, "hostname")
+        log_text(f"[INFO] DENY | {current_time} {route_str}")
+        return render_template('error.html', enumber="403", ename="This server requires an official domain"), 403
+
+    elif is_blacklisted(user_ip, now):
         route_str = build_route_str(request, "remote")
         log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="429", ename="You are blocked for 900s"), 429
-    elif count >= 20:
-        ip_block_info[user_ip] = now + timedelta(minutes=1)
-        route_str = build_route_str(request, "remote")
+        return render_template('error.html', enumber="403", ename=f"You are in naughty list: {user_ip}"), 403
+
+    elif is_blacklisted(x_forwarded_for, now):
+        route_str = build_route_str(request, "proxy")
         log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="429", ename="You are blocked for 60s"), 429
-
-    if os.path.isfile("./data/blacklist.json"):
-        with open("./data/blacklist.json", 'r', encoding='utf-8') as f:
-            blacklist: list = json.load(f)
-            f.close()
-        
-        with open("./data/domains.json", 'r', encoding='utf-8') as f:
-            domains: list = json.load(f)
-            f.close()
-
-        x_forwarded_for = headers.get("X-Forwarded-For", None)
-        isProxy = False if x_forwarded_for == None else True
-        isOfficialDomain = any(host.endswith(allowed) for allowed in domains)
-
-        if (isProxy) and "PROXY" in blacklist:
-            route_str = build_route_str(request, "proxy")
-            log_text(f"[INFO] DENY | {current_time} {route_str}")
-            return render_template('error.html', enumber="403", ename=f"Proxies are prohibited on this server"), 403
-        elif (not isProxy) and "NOT_PROXY" in blacklist:
-            route_str = build_route_str(request, "proxy")
-            log_text(f"[INFO] DENY | {current_time} {route_str}")
-            return render_template('error.html', enumber="403", ename=f"This server requires an official proxy"), 403
-        
-        if (isOfficialDomain) and "OFFICIAL_DOMAIN" in blacklist:
-            route_str = build_route_str(request, "hostname")
-            log_text(f"[INFO] DENY | {current_time} {route_str}")
-            return render_template('error.html', enumber="403", ename=f"Unofficial domains are prohibited on this server"), 403
-        elif (not isOfficialDomain) and "NOT_OFFICIAL_DOMAIN" in blacklist:
-            route_str = build_route_str(request, "hostname")
-            log_text(f"[INFO] DENY | {current_time} {route_str}")
-            return render_template('error.html', enumber="403", ename=f"This server requires an official domain"), 403
-
-        if request.remote_addr in blacklist:
-            route_str = build_route_str(request, "remote")
-            log_text(f"[INFO] DENY | {current_time} {route_str}")
-            return render_template('error.html', enumber="403", ename=f"You are in naughty list: {request.remote_addr}"), 403
-
-        if x_forwarded_for in blacklist:
-            route_str = build_route_str(request, "proxy")
-            log_text(f"[INFO] DENY | {current_time} {route_str}")
-            return render_template('error.html', enumber="403", ename=f"You are in naughty list: {x_forwarded_for}"), 403
+        return render_template('error.html', enumber="403", ename=f"You are in naughty list: {x_forwarded_for}"), 403
 
 @app.errorhandler(400)
 def four_o_o(e):
@@ -214,23 +213,30 @@ def four_o_two(e):
 def four_o_four(e):
     now = datetime.now(dt.timezone.utc)
     ip = request.headers.get("X-Forwarded-For", request.remote_addr)
-    ip_queue = ip_404_log[ip]
+    key = os.path.join(COUNT_DIR, f"404_{ip}.json")
+    Path(COUNT_DIR).mkdir(parents=True, exist_ok=True)
 
-    while ip_queue and (now - ip_queue[0]).total_seconds() > 60:
-        ip_queue.popleft()
-    ip_queue.append(now)
-    
-    current_time = str(now)
+    if os.path.exists(key):
+        with open(key, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    else:
+        data = {"timestamps": []}
+
+    data["timestamps"] = [t for t in data["timestamps"]
+                          if (now - datetime.fromisoformat(t)).total_seconds() < 60]
+    data["timestamps"].append(now.isoformat())
+    with open(key, 'w', encoding='utf-8') as f:
+        json.dump(data, f)
+
+    current_time = now.isoformat()
     route_str = build_route_str(request, "hostname")
     log_text(f"[INFO] E404 | {current_time} {route_str}")
 
-    if len(ip_queue) >= 5:
-        add_to_blacklist(ip)
-        return render_template('error.html', enumber="403", ename="You are now in the naughty list"), 403
-
-    elif len(ip_queue) >= 4:
+    if len(data["timestamps"]) >= 5:
+        add_to_blacklist(ip, timedelta(hours=1))
+        return render_template('error.html', enumber="403", ename="You are temporarily blacklisted"), 403
+    elif len(data["timestamps"]) >= 4:
         return render_template('final_warning.html'), 404
-
     return render_template('error.html', enumber="404", ename="Not Found")
 
 @app.errorhandler(414)
@@ -257,123 +263,50 @@ def five_o_three(e):
 
     return render_template('error.html', enumber="503", ename="Service Unavailable")
 
-def shutdown_later(delay=1):
-    time.sleep(delay)
-    os._exit(0)
-
 @app.route('/')
 def index_page():
-    headers = dict(request.headers)
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
     log_text(f"[INFO] PASS | {current_time} {route_str}")
-
     return render_template('index.html')
-
-@app.route('/error/<path:code>/')
-def error_page(code):
-
-    current_time = str(datetime.now(dt.timezone.utc))
-    route_str = build_route_str(request, "hostname")
-    log_text(f"[WARN] {current_time} {route_str}")
-
-    return render_template('error.html', enumber=code, ename=f"Error Page"), int(code)
 
 @app.route('/api/v1/')
 def api_index():
-    headers = dict(request.headers)
-    pong_data = {
-        "code": 0,
-        "content": "Pong!"
-    }
-
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
     log_text(f"[INFO] PASS | {current_time} {route_str}")
-
-    return jsonify(pong_data)
+    return jsonify({"code": 0, "content": "Pong!"})
 
 @app.route('/api/v1/stop/<path:key>')
 def api_stop(key):
     if secret_key == key:
-        threading.Thread(target=shutdown_later).start()
-        headers = dict(request.headers)
-        
-        pong_data = {
-            "code": 0,
-            "content": "Okay, Stopping Now!"
-        }
-
-        current_time = str(datetime.now(dt.timezone.utc))
-        route_str = build_route_str(request)
-        log_text(f"[INFO] PASS | {current_time} {route_str}")
-
-        return jsonify(pong_data)
+        threading.Thread(target=lambda: (time.sleep(1), os._exit(0))).start()
+        return jsonify({"code": 0, "content": "Okay, Stopping Now!"})
     else:
-        pong_data = {
-            "code": 1,
-            "content": "Need Secret Key for This Action"
-        }
-
-        current_time = str(datetime.now(dt.timezone.utc))
-        route_str = build_route_str(request, "remote")
-        log_text(f"[INFO] DENY {current_time} {route_str}")
-
-        return jsonify(pong_data)
-
-@app.route('/icons/<path:filename>')
-def icon_return(filename):
-    current_time = str(datetime.now(dt.timezone.utc))
-    route_str = build_route_str(request)
-    log_text(f"[INFO] PASS | {current_time} {route_str}")
-
-    return send_from_directory('static/icons', filename)
+        return jsonify({"code": 1, "content": "Need Secret Key for This Action"})
 
 @app.route('/favicon.ico')
 def favicon_return():
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
     log_text(f"[INFO] PASS | {current_time} {route_str}")
-
     return send_from_directory('static/favicon', "favicon.ico")
 
-@app.route('/zeta/')
-def zeta_index_page():
-    headers = dict(request.headers)
+@app.route('/icons/<path:filename>')
+def icon_return(filename):
     current_time = str(datetime.now(dt.timezone.utc))
     route_str = build_route_str(request)
     log_text(f"[INFO] PASS | {current_time} {route_str}")
-
-    return render_template('zeta-index.html')
-
-@app.route('/burners/')
-def burners_page():
-    headers = dict(request.headers)
-    current_time = str(datetime.now(dt.timezone.utc))
-    route_str = build_route_str(request)
-    log_text(f"[INFO] PASS | {current_time} {route_str}")
-
-    return render_template('burners.html')
-
-@app.route('/burners/img/<path:filename>')
-def burners_img(filename):
-    current_time = str(datetime.now(dt.timezone.utc))
-    route_str = build_route_str(request)
-    log_text(f"[INFO] PASS | {current_time} {route_str}")
-
-    return send_from_directory('static/burners', filename)
+    return send_from_directory('static/icons', filename)
 
 if __name__ == "__main__":
     public = True
     port = 80
-
     log_reset()
-
     host = "0.0.0.0" if public else "localhost"
     try:
         log_text(f"[INFO] Server Started ({host}:{port})")
         log_text(f"[INFO] Secret Key ({secret_key})")
         app.run(host, port)
-
     except KeyboardInterrupt:
         pass
