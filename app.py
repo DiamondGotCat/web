@@ -104,45 +104,45 @@ def rate_limit():
     count = len(ip_queue)
     if count >= 45:
         route_str = build_route_str(request, "remote")
-        log_text(f"[BLOCK] {current_time} {route_str}")
+        log_text(f"[INFO] BLOCK {current_time} {route_str}")
         return render_template('error.html', enumber="403", ename=f"You are in naughty list: {request.remote_addr}"), 403
 
     if user_ip in ip_block_info:
         if now < ip_block_info[user_ip]:
             seconds_left = int((ip_block_info[user_ip] - now).total_seconds())
             route_str = build_route_str(request, "remote")
-            log_text(f"[BLOCK] {current_time} {route_str}")
+            log_text(f"[INFO] BLOCK {current_time} {route_str}")
             return render_template('error.html', enumber="429", ename=f"You are blocked for {seconds_left}s"), 429
         else:
             del ip_block_info[user_ip]
     
     if count >= 44:
         route_str = build_route_str(request, "remote")
-        log_text(f"[BLOCK] {current_time} {route_str}")
+        log_text(f"[INFO] BLOCK {current_time} {route_str}")
         return render_template('final_warning.html'), 429
     elif count >= 40:
         route_str = build_route_str(request, "remote")
-        log_text(f"[BLOCK] {current_time} {route_str}")
+        log_text(f"[INFO] BLOCK {current_time} {route_str}")
         return render_template('error.html', enumber="429", ename="You are blocked for 3600s"), 429
     elif count >= 35:
         ip_block_info[user_ip] = now + timedelta(hours=1)
         route_str = build_route_str(request, "remote")
-        log_text(f"[BLOCK] {current_time} {route_str}")
+        log_text(f"[INFO] BLOCK {current_time} {route_str}")
         return render_template('error.html', enumber="429", ename="You are blocked for 3600s"), 429
     elif count >= 30:
         ip_block_info[user_ip] = now + timedelta(minutes=30)
         route_str = build_route_str(request, "remote")
-        log_text(f"[BLOCK] {current_time} {route_str}")
+        log_text(f"[INFO] BLOCK {current_time} {route_str}")
         return render_template('error.html', enumber="429", ename="You are blocked for 1800s"), 429
     elif count >= 25:
         ip_block_info[user_ip] = now + timedelta(minutes=15)
         route_str = build_route_str(request, "remote")
-        log_text(f"[BLOCK] {current_time} {route_str}")
+        log_text(f"[INFO] BLOCK {current_time} {route_str}")
         return render_template('error.html', enumber="429", ename="You are blocked for 900s"), 429
     elif count >= 20:
         ip_block_info[user_ip] = now + timedelta(minutes=1)
         route_str = build_route_str(request, "remote")
-        log_text(f"[BLOCK] {current_time} {route_str}")
+        log_text(f"[INFO] BLOCK {current_time} {route_str}")
         return render_template('error.html', enumber="429", ename="You are blocked for 60s"), 429
 
     if os.path.isfile("./data/blacklist.json"):
@@ -160,30 +160,30 @@ def rate_limit():
 
         if (isProxy) and "PROXY" in blacklist:
             route_str = build_route_str(request, "proxy")
-            log_text(f"[BLOCK] {current_time} {route_str}")
+            log_text(f"[INFO] BLOCK {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"Proxies are prohibited on this server"), 403
         elif (not isProxy) and "NOT_PROXY" in blacklist:
             route_str = build_route_str(request, "proxy")
-            log_text(f"[BLOCK] {current_time} {route_str}")
+            log_text(f"[INFO] BLOCK {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"This server requires an official proxy"), 403
         
         if (isOfficialDomain) and "OFFICIAL_DOMAIN" in blacklist:
             route_str = build_route_str(request, "hostname")
-            log_text(f"[BLOCK] {current_time} {route_str}")
+            log_text(f"[INFO] BLOCK {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"Unofficial domains are prohibited on this server"), 403
         elif (not isOfficialDomain) and "NOT_OFFICIAL_DOMAIN" in blacklist:
             route_str = build_route_str(request, "hostname")
-            log_text(f"[BLOCK] {current_time} {route_str}")
+            log_text(f"[INFO] BLOCK {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"This server requires an official domain"), 403
 
         if request.remote_addr in blacklist:
             route_str = build_route_str(request, "remote")
-            log_text(f"[BLOCK] {current_time} {route_str}")
+            log_text(f"[INFO] BLOCK {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"You are in naughty list: {request.remote_addr}"), 403
 
         if x_forwarded_for in blacklist:
             route_str = build_route_str(request, "proxy")
-            log_text(f"[BLOCK] {current_time} {route_str}")
+            log_text(f"[INFO] BLOCK {current_time} {route_str}")
             return render_template('error.html', enumber="403", ename=f"You are in naughty list: {x_forwarded_for}"), 403
 
 @app.errorhandler(400)
@@ -226,7 +226,7 @@ def four_o_four(e):
 
     if len(ip_queue) >= 7:
         add_to_blacklist(ip)
-        log_text(f"[BLOCK] {current_time} IP {ip} blacklisted due to excessive 404s (>=8 in 60s)")
+        log_text(f"[INFO] BLOCK {current_time} IP {ip} blacklisted due to excessive 404s (>=8 in 60s)")
         return render_template('error.html', enumber="403", ename="You are now in the naughty list"), 403
 
     elif len(ip_queue) >= 6:
@@ -319,7 +319,7 @@ def api_stop(key):
 
         current_time = str(datetime.now(dt.timezone.utc))
         route_str = build_route_str(request, "remote")
-        log_text(f"[BLOCK] {current_time} {route_str}")
+        log_text(f"[INFO] BLOCK {current_time} {route_str}")
 
         return jsonify(pong_data)
 
