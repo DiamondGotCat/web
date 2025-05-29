@@ -557,14 +557,19 @@ class Interpreter:
             self.pylo_globals.unset(f"{module}.{id}")
 
     def setup_builtins(self):
-        self.pylo_def("@", "NOT_OFFICIAL_DOMAIN", "NOT_OFFICIAL_DOMAIN")
-        self.pylo_def("@", "NOT_PROXY", "NOT_PROXY")
-        self.pylo_def("@", "notOfficialDomain", "NOT_OFFICIAL_DOMAIN")
-        self.pylo_def("@", "notProxy", "NOT_PROXY")
-
         self.pylo_def("@", "print", self.color_print)
         self.pylo_def("@", "show", self.pylo_print)
         self.pylo_def("@", "ask", input)
+
+        self.pylo_def("@", "PROXY", "PROXY")
+        self.pylo_def("@", "proxy", "PROXY")
+        self.pylo_def("@", "NOT_PROXY", "NOT_PROXY")
+        self.pylo_def("@", "notProxy", "NOT_PROXY")
+
+        self.pylo_def("@", "OFFICIAL_DOMAIN", "OFFICIAL_DOMAIN")
+        self.pylo_def("@", "officialDomain", "OFFICIAL_DOMAIN")
+        self.pylo_def("@", "NOT_OFFICIAL_DOMAIN", "NOT_OFFICIAL_DOMAIN")
+        self.pylo_def("@", "notOfficialDomain", "NOT_OFFICIAL_DOMAIN")
 
         def exit_now(code=0):
             exit(code)
