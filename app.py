@@ -270,6 +270,20 @@ def index_page():
     log_text(f"[INFO] PASS | {current_time} {route_str}")
     return render_template('index.html')
 
+@app.route('/robots.txt')
+def robots_txt():
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
+    return send_from_directory('static/for-crowler', "robots.txt")
+
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    current_time = str(datetime.now(dt.timezone.utc))
+    route_str = build_route_str(request)
+    log_text(f"[INFO] PASS | {current_time} {route_str}")
+    return send_from_directory('static/for-crowler', "sitemap.xml")
+
 @app.route('/api/v1/')
 def api_index():
     current_time = str(datetime.now(dt.timezone.utc))
