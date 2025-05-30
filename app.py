@@ -113,7 +113,7 @@ def rate_limit():
     if is_blacklisted(user_ip, now):
         route_str = build_route_str(request, "remote")
         log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="403", ename=f"You are in naughty list: {user_ip}"), 403
+        return render_template('special/error.html', enumber="403", ename=f"You are in naughty list: {user_ip}"), 403
 
     Path(COUNT_DIR).mkdir(parents=True, exist_ok=True)
     req_file = os.path.join(COUNT_DIR, f"{user_ip}.json")
@@ -133,19 +133,19 @@ def rate_limit():
 
     if count >= 45:
         add_to_blacklist(user_ip)
-        return render_template('error.html', enumber="403", ename="You are permanently blocked"), 403
+        return render_template('special/error.html', enumber="403", ename="You are permanently blocked"), 403
     elif count >= 40:
         add_to_blacklist(user_ip, timedelta(hours=1))
-        return render_template('error.html', enumber="429", ename="Blocked for 1 hour"), 429
+        return render_template('special/error.html', enumber="429", ename="Blocked for 1 hour"), 429
     elif count >= 35:
         add_to_blacklist(user_ip, timedelta(minutes=30))
-        return render_template('error.html', enumber="429", ename="Blocked for 30 minutes"), 429
+        return render_template('special/error.html', enumber="429", ename="Blocked for 30 minutes"), 429
     elif count >= 30:
         add_to_blacklist(user_ip, timedelta(minutes=15))
-        return render_template('error.html', enumber="429", ename="Blocked for 15 minutes"), 429
+        return render_template('special/error.html', enumber="429", ename="Blocked for 15 minutes"), 429
     elif count >= 25:
         add_to_blacklist(user_ip, timedelta(minutes=1))
-        return render_template('error.html', enumber="429", ename="Blocked for 1 minute"), 429
+        return render_template('special/error.html', enumber="429", ename="Blocked for 1 minute"), 429
 
     blacklist = load_blacklist()
     with open("./data/domains.json", 'r', encoding='utf-8') as f:
@@ -158,32 +158,32 @@ def rate_limit():
     if isProxy and is_blacklisted("PROXY", now):
         route_str = build_route_str(request, "proxy")
         log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="403", ename="Proxies are prohibited on this server"), 403
+        return render_template('special/error.html', enumber="403", ename="Proxies are prohibited on this server"), 403
 
     elif not isProxy and is_blacklisted("NOT_PROXY", now):
         route_str = build_route_str(request, "proxy")
         log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="403", ename="This server requires an official proxy"), 403
+        return render_template('special/error.html', enumber="403", ename="This server requires an official proxy"), 403
 
     elif isOfficialDomain and is_blacklisted("OFFICIAL_DOMAIN", now):
         route_str = build_route_str(request, "hostname")
         log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="403", ename="Official domains are prohibited"), 403
+        return render_template('special/error.html', enumber="403", ename="Official domains are prohibited"), 403
 
     elif not isOfficialDomain and is_blacklisted("NOT_OFFICIAL_DOMAIN", now):
         route_str = build_route_str(request, "hostname")
         log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="403", ename="This server requires an official domain"), 403
+        return render_template('special/error.html', enumber="403", ename="This server requires an official domain"), 403
 
     elif is_blacklisted(user_ip, now):
         route_str = build_route_str(request, "remote")
         log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="403", ename=f"You are in naughty list: {user_ip}"), 403
+        return render_template('special/error.html', enumber="403", ename=f"You are in naughty list: {user_ip}"), 403
 
     elif is_blacklisted(x_forwarded_for, now):
         route_str = build_route_str(request, "proxy")
         log_text(f"[INFO] DENY | {current_time} {route_str}")
-        return render_template('error.html', enumber="403", ename=f"You are in naughty list: {x_forwarded_for}"), 403
+        return render_template('special/error.html', enumber="403", ename=f"You are in naughty list: {x_forwarded_for}"), 403
 
 @app.errorhandler(400)
 def four_o_o(e):
@@ -191,7 +191,7 @@ def four_o_o(e):
     route_str = build_route_str(request, "hostname")
     log_text(f"[INFO] E400 | {current_time} {route_str}")
 
-    return render_template('error.html', enumber="400", ename="Bad Request")
+    return render_template('special/error.html', enumber="400", ename="Bad Request")
 
 @app.errorhandler(401)
 def four_o_one(e):
@@ -199,7 +199,7 @@ def four_o_one(e):
     route_str = build_route_str(request, "hostname")
     log_text(f"[INFO] E401 | {current_time} {route_str}")
 
-    return render_template('error.html', enumber="401", ename="Unauthorized")
+    return render_template('special/error.html', enumber="401", ename="Unauthorized")
 
 @app.errorhandler(403)
 def four_o_two(e):
@@ -207,7 +207,7 @@ def four_o_two(e):
     route_str = build_route_str(request, "hostname")
     log_text(f"[INFO] E403 | {current_time} {route_str}")
 
-    return render_template('error.html', enumber="403", ename="Forbidden")
+    return render_template('special/error.html', enumber="403", ename="Forbidden")
 
 @app.errorhandler(404)
 def four_o_four(e):
@@ -234,10 +234,10 @@ def four_o_four(e):
 
     if len(data["timestamps"]) >= 5:
         add_to_blacklist(ip, timedelta(hours=1))
-        return render_template('error.html', enumber="403", ename="You are temporarily blacklisted"), 403
+        return render_template('special/error.html', enumber="403", ename="You are temporarily blacklisted"), 403
     elif len(data["timestamps"]) >= 4:
         return render_template('final_warning.html'), 404
-    return render_template('error.html', enumber="404", ename="Not Found")
+    return render_template('special/error.html', enumber="404", ename="Not Found")
 
 @app.errorhandler(414)
 def four_one_four(e):
@@ -245,7 +245,7 @@ def four_one_four(e):
     route_str = build_route_str(request, "hostname")
     log_text(f"[INFO] E414 | {current_time} {route_str}")
 
-    return render_template('error.html', enumber="414", ename="URI Too Long")
+    return render_template('special/error.html', enumber="414", ename="URI Too Long")
 
 @app.errorhandler(500)
 def five_o_o(e):
@@ -253,7 +253,7 @@ def five_o_o(e):
     route_str = build_route_str(request, "hostname")
     log_text(f"[INFO] E500 | {current_time} {route_str}")
 
-    return render_template('error.html', enumber="500", ename="Internal Server Error")
+    return render_template('special/error.html', enumber="500", ename="Internal Server Error")
 
 @app.errorhandler(503)
 def five_o_three(e):
@@ -261,7 +261,7 @@ def five_o_three(e):
     route_str = build_route_str(request, "hostname")
     log_text(f"[INFO] E503 | {current_time} {route_str}")
 
-    return render_template('error.html', enumber="503", ename="Service Unavailable")
+    return render_template('special/error.html', enumber="503", ename="Service Unavailable")
 
 @app.route('/')
 def index_page():
@@ -323,7 +323,7 @@ def zeta_index_page():
     route_str = build_route_str(request)
     log_text(f"[INFO] PASS | {current_time} {route_str}")
 
-    return render_template('zeta-index.html')
+    return render_template('zeta/index.html')
 
 @app.route('/burners/')
 def burners_page():
@@ -331,7 +331,7 @@ def burners_page():
     route_str = build_route_str(request)
     log_text(f"[INFO] PASS | {current_time} {route_str}")
 
-    return render_template('burners.html')
+    return render_template('burners/index.html')
 
 @app.route('/burners/img/<path:filename>')
 def burners_img(filename):
