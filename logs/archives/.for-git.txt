@@ -1,2 +1,0 @@
-This is a temporary file used to keep the folder on Git.
-You can delete it after cloning.

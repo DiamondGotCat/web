@@ -1,11 +1,5 @@
-# Web
-Source code of diamondgotcat.net
-
-## Source code Infomation
-**Language/Files:** Python, HTML, JSON, Image(e.g. PNG)
-
-**Librarys:** built-ins, flask
-
-**Networking:** HTTPS/HTTP
-
-**Analytics System:** Original(DGC-Analytics)
+This source code is no longer fully functional.
+It caused Flask to behave strangely in the past.
+No amount of resetting has worked.
+This repository will be archived.
+If you need to see the source code, look at the previous commit.
