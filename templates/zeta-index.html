@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "zeta-base.html" %}
 
 {% block title %}
 Zeta
@@ -23,7 +23,28 @@ Fully Open-source LLM
     </div>
 </section>
 <div class="p-16 text-center">
-    <p class="text-2xl">Under preparation</p>
-    <p>Comming soon!</p>
+    <section id="what-is-fully" class="p-4">
+        <p class="text-2xl">What is "Fully" Open-source?</p>
+        <p>Zeta's biggest features</p>
+        <p class="text-lg">The Open Source LLM can't really be called open source.</p>
+        <p>DiamondGotCat, the developer of Zeta, noticed this.</p>
+        <p>Open source LLM is just a model released under an open source license.</p>
+        <p>Where is the source? There is no complete source anywhere.</p>
+        <p class="text-lg">Zeta is "Fully" Open-source LLM.</p>
+        <p>To solve this problem, Zeta has made everything public,</p>
+        <p>including not only the models but also the training scripts (which we actually use) and datasets.</p>
+    </section>
+
+    <section id="how-does-it-compare" class="p-4">
+        <p class="text-2xl">How does it compare to other LLMs?</p>
+        <p>Lightweight and efficient</p>
+        <p class="text-lg">Accuracy of answers</p>
+        <p>To be honest, Zeta's answer is not that great.</p>
+        <p>However, considering that Zeta has parameters of about 0.5B,</p>
+        <p>and was created by an individual, it's not bad.</p>
+        <p class="text-lg">Support for GGUF format</p>
+        <p>All models have been converted by mradermacher and are of high quality and easy to try.</p>
+        <p>It is also available on Ollama, so please feel free to use it.</p>
+    </section>
 </div>
 {% endblock %}
