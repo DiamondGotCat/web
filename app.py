@@ -312,10 +312,19 @@ def favicon_return():
 
 @app.route('/icons/<path:filename>')
 def icon_return(filename):
-    current_time = str(datetime.now(dt.timezone.utc))
-    route_str = build_route_str(request)
-    log_text(f"[INFO] PASS | {current_time} {route_str}")
-    return send_from_directory('static/icons', filename)
+    try:
+        current_time = str(datetime.now(dt.timezone.utc))
+        route_str = build_route_str(request)
+        log_text(f"[INFO] PASS | {current_time} {route_str}")
+
+        icon_dir = os.path.join(app.root_path, 'static/icons')
+        return send_from_directory(icon_dir, filename)
+    
+    except Exception as e:
+        import traceback
+        log_text(f"[ERROR] Failed to serve icon: {filename}")
+        log_text(traceback.format_exc())
+        return render_template('special/error.html', enumber="500", ename="Internal Server Error"), 500
 
 @app.route('/zeta/')
 def zeta_index_page():
